@@ -13,11 +13,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      // Reset viewport when iOS keyboard dismisses
-      window.visualViewport && window.visualViewport.addEventListener('resize', () => {
-        document.documentElement.style.height = window.visualViewport.height + 'px';
-      });
-    </script>
   </body>
 </html>
