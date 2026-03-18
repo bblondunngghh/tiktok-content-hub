@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send, Settings, X, Eye, EyeOff, CheckCircle, Trash2, CalendarPlus, FolderOpen } from "lucide-react";
+import { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send, Settings, X, Eye, EyeOff, CheckCircle, Trash2, CalendarPlus, FolderOpen, LayoutGrid } from "lucide-react";
 
 // ─── DATA ───────────────────────────────────────────────────────────
 const HOOKS = {
@@ -161,18 +161,24 @@ function NavIcon({ src, className, active }) {
 }
 
 // ─── NAV ─────────────────────────────────────────────────────────────
-const TABS = [
+const PRIMARY_TABS = [
   { id: "generate", label: "Generate", customIcon: "/icons/Reward-Stars-2--Streamline-Ultimate.svg" },
   { id: "library", label: "Library", customIcon: "/icons/Archive-Books--Streamline-Ultimate.svg" },
   { id: "inventory", label: "Inventory", icon: "Home" },
+  { id: "calendar", label: "Calendar", customIcon: "/icons/Calendar-Edit-1--Streamline-Ultimate.svg" },
+];
+
+const MORE_TABS = [
   { id: "hooks", label: "Hooks", customIcon: "/icons/Factory-Industrial-Robot-Arm-1--Streamline-Ultimate.svg" },
   { id: "captions", label: "Captions", customIcon: "/icons/Subtitles--Streamline-Ultimate.svg" },
   { id: "hashtags", label: "Hashtags", icon: "Hash" },
-  { id: "calendar", label: "Calendar", customIcon: "/icons/Calendar-Edit-1--Streamline-Ultimate.svg" },
   { id: "formulas", label: "Video Formulas", customIcon: "/icons/Video-Player-Movie--Streamline-Ultimate.svg" },
   { id: "algorithm", label: "Algorithm", customIcon: "/icons/Analytics-Net--Streamline-Ultimate.svg" },
   { id: "checklist", label: "Checklist", customIcon: "/icons/Notes-Checklist-Flip--Streamline-Ultimate.svg" },
 ];
+
+const ALL_TABS = [...PRIMARY_TABS, ...MORE_TABS];
+const MORE_TAB_IDS = new Set(MORE_TABS.map(t => t.id));
 
 // ─── HOOKS PAGE ─────────────────────────────────────────────────────
 function HooksPage() {
@@ -1131,7 +1137,7 @@ function VideoStitcher({ clips, content, onComplete, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black flex flex-col">
+    <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
       <canvas ref={canvasRef} className="hidden" />
 
       <div className="flex-shrink-0 p-4 pt-[env(safe-area-inset-top)] flex items-center justify-between">
@@ -1310,7 +1316,7 @@ function GuidedCamera({ shotList, onComplete, onClose }) {
   const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black">
+    <div className="fixed inset-0 z-[9999] bg-black">
       {/* Full-screen camera */}
       <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" playsInline muted autoPlay />
 
@@ -1836,19 +1842,63 @@ function usePostReminders() {
   }, []);
 }
 
+// ─── MORE OVERLAY ───────────────────────────────────────────────────
+function MoreOverlay({ open, onClose, onSelect, activeTab }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-lg mx-3 mb-24 rounded-3xl p-5 animate-in fade-in slide-in-from-bottom-4"
+        style={{
+          backgroundColor: 'rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-white/80">Tools</h2>
+          <button onClick={onClose} className="text-white/40 hover:text-white/70 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {MORE_TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => { onSelect(t.id); onClose(); }}
+              className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200 ${activeTab === t.id ? 'bg-white/15 text-white' : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'}`}
+            >
+              {t.customIcon ? <NavIcon src={t.customIcon} className="w-7 h-7" active={activeTab === t.id} /> : <DynIcon name={t.icon} className="w-7 h-7" />}
+              <span className="text-[11px] font-medium leading-tight text-center">{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ───────────────────────────────────────────────────────
 export default function App() {
   const [tab, setTab] = useState("generate");
+  const [moreOpen, setMoreOpen] = useState(false);
   usePostReminders();
 
   const pages = { generate: GeneratePage, library: LibraryPage, inventory: InventoryPage, hooks: HooksPage, captions: CaptionsPage, hashtags: HashtagsPage, calendar: CalendarPage, formulas: FormulasPage, algorithm: AlgorithmPage, checklist: ChecklistPage };
   const Page = pages[tab];
 
+  const isMoreTab = MORE_TAB_IDS.has(tab);
+
   const tabsRef = useRef({});
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
 
   useEffect(() => {
-    const el = tabsRef.current[tab];
+    const activeId = isMoreTab ? '__more__' : tab;
+    const el = tabsRef.current[activeId];
     if (el) {
       const parent = el.parentElement;
       setIndicator({
@@ -1856,13 +1906,14 @@ export default function App() {
         width: el.offsetWidth,
       });
     }
-  }, [tab]);
+  }, [tab, isMoreTab]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
+      {/* Header — minimal */}
       <div className="flex-shrink-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderTop: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), inset 0 0 6px 3px rgba(255,255,255,0.04)' }}>
-        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center gap-2 mb-3 sm:mb-4" style={{ paddingLeft: `calc(${100 / (TABS.length * 2)}% - 16px)` }}>
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
+          <div className="flex items-center gap-2">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-fuchsia-500/80 to-violet-600/80 flex items-center justify-center border border-white/20">
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
@@ -1871,29 +1922,11 @@ export default function App() {
               <p className="text-[10px] sm:text-xs text-white/50">Clayton Homes | 2026 Strategy</p>
             </div>
           </div>
-          <div className="relative">
-            <div className="flex">
-              {TABS.map(t => (
-                <button key={t.id} ref={el => tabsRef.current[t.id] = el} onClick={() => setTab(t.id)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 pb-3 text-xs font-medium transition-colors duration-200 ${tab === t.id ? "text-white" : "text-white/40 hover:text-white/70"}`}>
-                  {t.customIcon ? <NavIcon src={t.customIcon} className="w-6 h-6 sm:w-7 sm:h-7" active={tab === t.id} /> : <DynIcon name={t.icon} className="w-6 h-6 sm:w-7 sm:h-7" />}
-                  <span className="hidden sm:inline text-[10px] leading-tight">{t.label}</span>
-                </button>
-              ))}
-            </div>
-            <div
-              className="absolute bottom-0 h-[2px] rounded-full transition-all duration-300 ease-in-out"
-              style={{
-                left: indicator.left + indicator.width * 0.2,
-                width: indicator.width * 0.6,
-                background: '#7c3aed',
-              }}
-            />
-          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]" style={{ WebkitOverflowScrolling: 'touch' }}>
+      {/* Page content */}
+      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch', paddingBottom: '5.5rem' }}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <Page />
         </div>
@@ -1902,6 +1935,60 @@ export default function App() {
           Sources: Buffer, Sprout Social, Influence4You, Socialync, OpusClip — 2026 TikTok Algorithm Research
         </div>
       </div>
+
+      {/* Bottom tab bar */}
+      <div
+        className="flex-shrink-0 z-50"
+        style={{
+          borderRadius: '24px 24px 0 0',
+          backgroundColor: 'rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: 'none',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 0 6px 3px rgba(255,255,255,0.04)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
+        <div className="max-w-4xl mx-auto px-2">
+          <div className="relative">
+            {/* Active indicator — top of bar */}
+            <div
+              className="absolute top-0 h-[2px] rounded-full transition-all duration-300 ease-in-out"
+              style={{
+                left: indicator.left + indicator.width * 0.2,
+                width: indicator.width * 0.6,
+                background: '#7c3aed',
+              }}
+            />
+            <div className="flex">
+              {PRIMARY_TABS.map(t => (
+                <button
+                  key={t.id}
+                  ref={el => tabsRef.current[t.id] = el}
+                  onClick={() => { setTab(t.id); setMoreOpen(false); }}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1 pt-3 pb-2 text-xs font-medium transition-colors duration-200 ${tab === t.id ? "text-white" : "text-white/40 hover:text-white/70"}`}
+                >
+                  {t.customIcon ? <NavIcon src={t.customIcon} className="w-6 h-6" active={tab === t.id} /> : <DynIcon name={t.icon} className="w-6 h-6" />}
+                  <span className="text-[10px] leading-tight">{t.label}</span>
+                </button>
+              ))}
+              {/* More button */}
+              <button
+                ref={el => tabsRef.current['__more__'] = el}
+                onClick={() => setMoreOpen(!moreOpen)}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 pt-3 pb-2 text-xs font-medium transition-colors duration-200 ${isMoreTab || moreOpen ? "text-white" : "text-white/40 hover:text-white/70"}`}
+              >
+                <LayoutGrid className="w-6 h-6" />
+                <span className="text-[10px] leading-tight">More</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* More overlay */}
+      <MoreOverlay open={moreOpen} onClose={() => setMoreOpen(false)} onSelect={setTab} activeTab={tab} />
     </div>
   );
 }
