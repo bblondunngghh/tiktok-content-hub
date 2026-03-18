@@ -1632,7 +1632,7 @@ function InventoryPage() {
           <button onClick={batchGenerate}
             className="px-4 rounded-2xl text-white font-semibold flex items-center gap-2 bg-emerald-500/30 border border-emerald-500/40 hover:bg-emerald-500/40 transition-all flex-shrink-0"
             style={{ height: '44px' }}>
-            <Sparkles className="w-4 h-4" /> Generate {selected.size}
+            <img src="/icons/Reward-Stars-2--Streamline-Ultimate.svg" alt="" className="w-4 h-4 invert" /> Generate {selected.size}
           </button>
         )}
       </div>
@@ -1753,7 +1753,7 @@ function GeneratePage() {
             className="px-6 rounded-2xl text-white font-semibold flex items-center gap-2 hover:bg-white/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-white/15 border border-white/20 backdrop-blur-sm flex-shrink-0"
             style={{ height: '44px' }}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <img src="/icons/Reward-Stars-2--Streamline-Ultimate.svg" alt="" className="w-4 h-4 invert" />}
             {loading ? "Generating..." : "Generate"}
           </button>
         </div>
@@ -2013,7 +2013,7 @@ export default function App() {
         <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-fuchsia-500/80 to-violet-600/80 flex items-center justify-center border border-white/20">
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <img src="/icons/Reward-Stars-2--Streamline-Ultimate.svg" alt="" className="w-4 h-4 sm:w-5 sm:h-5 invert" />
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-bold text-white leading-tight">TikTok Content Hub</h1>
