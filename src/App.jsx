@@ -1108,7 +1108,7 @@ export default function App() {
   }, [tab]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-shrink-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderTop: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), inset 0 0 6px 3px rgba(255,255,255,0.04)' }}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center gap-2 mb-3 sm:mb-4" style={{ paddingLeft: `calc(${100 / (TABS.length * 2)}% - 16px)` }}>
