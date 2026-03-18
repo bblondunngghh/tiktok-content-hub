@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb } from "lucide-react";
+import { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send } from "lucide-react";
 
 // ─── DATA ───────────────────────────────────────────────────────────
 const HOOKS = {
@@ -141,7 +141,7 @@ const POST_CHECKLIST = [
 ];
 
 // ─── ICON MAP ───────────────────────────────────────────────────────
-const IconMap = { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb };
+const IconMap = { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send };
 const DynIcon = ({ name, ...props }) => { const I = IconMap[name]; return I ? <I {...props} /> : null; };
 
 // ─── COPY BUTTON ────────────────────────────────────────────────────
@@ -162,6 +162,7 @@ function NavIcon({ src, className }) {
 
 // ─── NAV ─────────────────────────────────────────────────────────────
 const TABS = [
+  { id: "generate", label: "Generate", icon: "Sparkles" },
   { id: "hooks", label: "Hooks", customIcon: "/icons/Factory-Industrial-Robot-Arm-1--Streamline-Ultimate.svg" },
   { id: "captions", label: "Captions", customIcon: "/icons/Subtitles--Streamline-Ultimate.svg" },
   { id: "hashtags", label: "Hashtags", icon: "Hash" },
@@ -491,11 +492,194 @@ function ChecklistPage() {
   );
 }
 
+// ─── GENERATE PAGE ──────────────────────────────────────────────────
+function GeneratePage() {
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
+
+  const generate = async () => {
+    if (!url.trim()) return;
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Generation failed");
+      setResult(data.content);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="glass rounded-2xl p-6 min-h-[180px] border-fuchsia-500/30 bg-gradient-to-r from-fuchsia-500/30 to-violet-600/30">
+        <h2 className="text-2xl font-bold mb-2 text-white">AI Content Generator</h2>
+        <p className="text-white/70 mb-4">Paste a Clayton Homes listing URL and get all your TikTok content generated instantly.</p>
+        <div className="flex gap-2">
+          <div className="flex-1 relative">
+            <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+            <input
+              type="url"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && generate()}
+              placeholder="Paste Clayton Homes listing URL..."
+              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-fuchsia-400/50 focus:border-fuchsia-400/50 outline-none"
+            />
+          </div>
+          <button
+            onClick={generate}
+            disabled={loading || !url.trim()}
+            className="glass-btn-active px-6 py-3 rounded-2xl text-white font-semibold flex items-center gap-2 hover:bg-white/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {loading ? "Generating..." : "Generate"}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="glass-subtle rounded-2xl p-4 border-red-500/30 bg-red-500/10">
+          <p className="text-red-300 font-medium">{error}</p>
+        </div>
+      )}
+
+      {loading && (
+        <div className="glass rounded-2xl p-12 flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-10 h-10 text-fuchsia-400 animate-spin" />
+          <div className="text-center">
+            <p className="text-white font-semibold">Analyzing listing & generating content...</p>
+            <p className="text-white/50 text-sm mt-1">This takes about 10-15 seconds</p>
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-6">
+          {/* Home Summary */}
+          <div className="glass-subtle rounded-2xl p-5">
+            <h3 className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-2">Home Summary</h3>
+            <p className="text-white font-medium">{result.homeSummary}</p>
+          </div>
+
+          {/* Hooks */}
+          <div className="glass rounded-2xl p-6 border-violet-500/30 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20">
+            <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-violet-300" /> Generated Hooks
+            </h3>
+            <div className="space-y-3">
+              {result.hooks.map((hook, i) => (
+                <div key={i} className="glass-subtle rounded-xl p-4 flex items-center justify-between gap-4">
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-violet-300/70">{hook.style}</span>
+                    <p className="text-white font-medium mt-0.5">"{hook.text}"</p>
+                  </div>
+                  <CopyBtn text={hook.text} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Caption */}
+          <div className="glass rounded-2xl p-6 border-cyan-500/30 bg-gradient-to-r from-cyan-500/20 to-blue-500/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                <Type className="w-5 h-5 text-cyan-300" /> Ready-to-Post Caption
+              </h3>
+              <CopyBtn text={result.caption} label="Copy Caption" />
+            </div>
+            <div className="glass-subtle rounded-xl p-4">
+              <p className="text-white/90 whitespace-pre-wrap leading-relaxed">{result.caption}</p>
+            </div>
+          </div>
+
+          {/* Hashtags */}
+          <div className="glass rounded-2xl p-6 border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-pink-500/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                <Hash className="w-5 h-5 text-purple-300" /> Hashtags
+              </h3>
+              <CopyBtn text={result.hashtags.join(" ")} label="Copy All" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {result.hashtags.map((tag, i) => (
+                <span key={i} className="bg-purple-400/20 text-purple-200 px-3 py-1.5 rounded-2xl text-sm font-medium border border-purple-400/30">{tag}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Shot List */}
+          <div className="glass rounded-2xl p-6 border-orange-500/30 bg-gradient-to-r from-orange-500/20 to-red-500/20">
+            <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+              <Video className="w-5 h-5 text-orange-300" /> Video Shot List
+            </h3>
+            <div className="space-y-3">
+              {result.shotList.map((shot, i) => (
+                <div key={i} className="glass-subtle rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="w-7 h-7 rounded-lg bg-orange-400/20 text-orange-300 font-bold text-xs flex items-center justify-center border border-orange-400/30">{shot.shot}</span>
+                    <span className="text-white font-semibold flex-1">{shot.description}</span>
+                    <span className="text-white/40 text-xs">{shot.duration}</span>
+                  </div>
+                  <p className="text-orange-200/60 text-sm ml-10">{shot.tip}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Posting Strategy */}
+          <div className="glass rounded-2xl p-6 border-emerald-500/30 bg-gradient-to-r from-emerald-500/20 to-teal-500/20">
+            <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-emerald-300" /> Posting Strategy
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="glass-subtle rounded-xl p-4 text-center">
+                <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Best Day</p>
+                <p className="text-white font-bold text-lg">{result.postingStrategy.bestDay}</p>
+              </div>
+              <div className="glass-subtle rounded-xl p-4 text-center">
+                <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Best Time</p>
+                <p className="text-white font-bold text-lg">{result.postingStrategy.bestTime}</p>
+              </div>
+              <div className="glass-subtle rounded-xl p-4 text-center">
+                <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Content Type</p>
+                <p className="text-white font-bold text-lg">{result.postingStrategy.contentType}</p>
+              </div>
+              <div className="glass-subtle rounded-xl p-4 col-span-2">
+                <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Why</p>
+                <p className="text-white/80 text-sm">{result.postingStrategy.reasoning}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Generate Again */}
+          <button
+            onClick={() => { setResult(null); setUrl(""); }}
+            className="glass-btn w-full py-3 rounded-2xl text-white/70 font-medium hover:text-white transition-all text-center"
+          >
+            Generate for Another Listing
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN APP ───────────────────────────────────────────────────────
 export default function App() {
-  const [tab, setTab] = useState("hooks");
+  const [tab, setTab] = useState("generate");
 
-  const pages = { hooks: HooksPage, captions: CaptionsPage, hashtags: HashtagsPage, calendar: CalendarPage, formulas: FormulasPage, algorithm: AlgorithmPage, checklist: ChecklistPage };
+  const pages = { generate: GeneratePage, hooks: HooksPage, captions: CaptionsPage, hashtags: HashtagsPage, calendar: CalendarPage, formulas: FormulasPage, algorithm: AlgorithmPage, checklist: ChecklistPage };
   const Page = pages[tab];
 
   const tabsRef = useRef({});
