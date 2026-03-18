@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send } from "lucide-react";
+import { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send, Settings, X, Eye, EyeOff, CheckCircle } from "lucide-react";
 
 // ─── DATA ───────────────────────────────────────────────────────────
 const HOOKS = {
@@ -141,7 +141,7 @@ const POST_CHECKLIST = [
 ];
 
 // ─── ICON MAP ───────────────────────────────────────────────────────
-const IconMap = { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send };
+const IconMap = { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send, Settings, X, Eye, EyeOff, CheckCircle };
 const DynIcon = ({ name, ...props }) => { const I = IconMap[name]; return I ? <I {...props} /> : null; };
 
 // ─── COPY BUTTON ────────────────────────────────────────────────────
@@ -492,15 +492,104 @@ function ChecklistPage() {
   );
 }
 
+// ─── LLM SETTINGS ───────────────────────────────────────────────────
+const PROVIDERS = [
+  { id: "openai", name: "ChatGPT (OpenAI)", placeholder: "sk-..." },
+  { id: "anthropic", name: "Claude (Anthropic)", placeholder: "sk-ant-..." },
+];
+
+function getSettings() {
+  try {
+    const stored = localStorage.getItem("llm-settings");
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return { provider: "openai", apiKey: "" };
+}
+
+function saveSettings(settings) {
+  localStorage.setItem("llm-settings", JSON.stringify(settings));
+}
+
+function SettingsModal({ open, onClose }) {
+  const settings = getSettings();
+  const [provider, setProvider] = useState(settings.provider);
+  const [apiKey, setApiKey] = useState(settings.apiKey);
+  const [showKey, setShowKey] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  if (!open) return null;
+
+  const handleSave = () => {
+    saveSettings({ provider, apiKey });
+    setSaved(true);
+    setTimeout(() => { setSaved(false); onClose(); }, 800);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="glass rounded-2xl p-6 w-full max-w-md relative z-10" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-white font-bold text-lg">AI Settings</h3>
+          <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <label className="text-xs font-semibold text-white/50 uppercase tracking-wide block mb-2">AI Provider</label>
+            <div className="grid grid-cols-2 gap-2">
+              {PROVIDERS.map(p => (
+                <button key={p.id} onClick={() => setProvider(p.id)}
+                  className={`p-3 rounded-xl text-sm font-medium transition-all text-center ${provider === p.id ? "glass-btn-active text-white" : "glass-subtle text-white/60 hover:text-white"}`}>
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-white/50 uppercase tracking-wide block mb-2">API Key</label>
+            <div className="relative">
+              <input
+                type={showKey ? "text" : "password"}
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+                placeholder={PROVIDERS.find(p => p.id === provider)?.placeholder}
+                className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-fuchsia-400/50 focus:border-fuchsia-400/50 outline-none"
+              />
+              <button onClick={() => setShowKey(!showKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
+                {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="text-white/30 text-xs mt-2">Your key is stored locally on this device only. It's never saved on any server.</p>
+          </div>
+
+          <button onClick={handleSave}
+            className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${saved ? "bg-green-500/30 text-green-300 border border-green-500/30" : "glass-btn-active text-white hover:bg-white/30"}`}>
+            {saved ? <><CheckCircle className="w-4 h-4" /> Saved!</> : "Save Settings"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── GENERATE PAGE ──────────────────────────────────────────────────
 function GeneratePage() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const settings = getSettings();
+  const hasKey = settings.apiKey && settings.apiKey.length > 5;
 
   const generate = async () => {
     if (!url.trim()) return;
+    if (!hasKey) { setShowSettings(true); return; }
     setLoading(true);
     setError(null);
     setResult(null);
@@ -508,7 +597,7 @@ function GeneratePage() {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: url.trim(), provider: settings.provider, apiKey: settings.apiKey }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Generation failed");
@@ -522,9 +611,20 @@ function GeneratePage() {
 
   return (
     <div className="space-y-6">
+      <SettingsModal open={showSettings} onClose={() => setShowSettings(false)} />
       <div className="glass rounded-2xl p-6 min-h-[180px] border-fuchsia-500/30 bg-gradient-to-r from-fuchsia-500/30 to-violet-600/30">
-        <h2 className="text-2xl font-bold mb-2 text-white">AI Content Generator</h2>
-        <p className="text-white/70 mb-4">Paste a Clayton Homes listing URL and get all your TikTok content generated instantly.</p>
+        <div className="flex items-start justify-between mb-2">
+          <h2 className="text-2xl font-bold text-white">AI Content Generator</h2>
+          <button onClick={() => setShowSettings(true)} className="text-white/40 hover:text-white transition-colors p-1">
+            <Settings className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-white/70 mb-1">Paste a Clayton Homes listing URL and get all your TikTok content generated instantly.</p>
+        {hasKey ? (
+          <p className="text-green-300/70 text-xs mb-4 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Connected to {PROVIDERS.find(p => p.id === settings.provider)?.name}</p>
+        ) : (
+          <p className="text-amber-300/70 text-xs mb-4 cursor-pointer hover:text-amber-200" onClick={() => setShowSettings(true)}>Tap here to connect your AI provider to get started</p>
+        )}
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
