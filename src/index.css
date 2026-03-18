@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 html {
-  background: #0a0a0a;
+  background: #0a0a0a url('/bg.jpg') no-repeat center center fixed;
+  background-size: cover;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -18,7 +19,7 @@ html, body {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #0a0a0a;
+  background: transparent;
   position: relative;
 }
 
@@ -29,6 +30,7 @@ body {
   right: 0;
   bottom: 0;
   overflow: hidden;
+  background: rgba(0, 0, 0, 0.65);
 }
 
 /* Hide scrollbar */
