@@ -1926,7 +1926,7 @@ export default function App() {
       </div>
 
       {/* Page content — scrolls behind header and bottom bar */}
-      <div className="h-full overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch', paddingTop: 'calc(env(safe-area-inset-top) + 64px)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 88px)' }}>
+      <div className="h-full overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch', paddingTop: 'calc(env(safe-area-inset-top) + 64px)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <Page />
         </div>
@@ -1965,20 +1965,20 @@ export default function App() {
                     key={t.id}
                     ref={el => tabsRef.current[t.id] = el}
                     onClick={() => { setTab(t.id); setMoreOpen(false); }}
-                    className={`flex-1 flex flex-col items-center justify-center gap-1 pt-3 pb-2 text-xs font-medium transition-colors duration-200 ${tab === t.id ? "text-white" : "text-white/40 hover:text-white/70"}`}
+                    className={`flex-1 flex flex-col items-center justify-center gap-1.5 pt-4 pb-3 text-xs font-medium transition-colors duration-200 ${tab === t.id ? "text-white" : "text-white/40 hover:text-white/70"}`}
                   >
-                    {t.customIcon ? <NavIcon src={t.customIcon} className="w-6 h-6" active={tab === t.id} /> : <DynIcon name={t.icon} className="w-6 h-6" />}
-                    <span className="text-[10px] leading-tight">{t.label}</span>
+                    {t.customIcon ? <NavIcon src={t.customIcon} className="w-8 h-8" active={tab === t.id} /> : <DynIcon name={t.icon} className="w-8 h-8" />}
+                    <span className="text-[11px] leading-tight">{t.label}</span>
                   </button>
                 ))}
                 {/* More button */}
                 <button
                   ref={el => tabsRef.current['__more__'] = el}
                   onClick={() => setMoreOpen(!moreOpen)}
-                  className={`flex-1 flex flex-col items-center justify-center gap-1 pt-3 pb-2 text-xs font-medium transition-colors duration-200 ${isMoreTab || moreOpen ? "text-white" : "text-white/40 hover:text-white/70"}`}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1.5 pt-4 pb-3 text-xs font-medium transition-colors duration-200 ${isMoreTab || moreOpen ? "text-white" : "text-white/40 hover:text-white/70"}`}
                 >
-                  <LayoutGrid className="w-6 h-6" />
-                  <span className="text-[10px] leading-tight">More</span>
+                  <LayoutGrid className="w-8 h-8" />
+                  <span className="text-[11px] leading-tight">More</span>
                 </button>
               </div>
             </div>
