@@ -700,7 +700,11 @@ function LibraryPage() {
   const [expanded, setExpanded] = useState(null);
   const [scheduleId, setScheduleId] = useState(null);
   const [filmingId, setFilmingId] = useState(null);
-  const [stitchingData, setStitchingData] = useState(null); // { id, clips, content }
+  const [stitchingData, setStitchingData] = useState(null);
+  const [selections, setSelections] = useState({}); // { [entryId]: { hook: 0, caption: true, hashtags: true } }
+
+  const getSelection = (id) => selections[id] || { hook: 0, caption: true, hashtags: true };
+  const updateSelection = (id, key, value) => setSelections(prev => ({ ...prev, [id]: { ...getSelection(id), [key]: value } }));
 
   const refresh = () => setLibrary(getLibrary());
 
@@ -792,37 +796,57 @@ function LibraryPage() {
 
               {expanded === entry.id && (
                 <div className="px-5 pb-5 space-y-4 border-t border-white/5 pt-4">
-                  {/* Hooks */}
+                  {/* Hooks — select one */}
                   <div>
-                    <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-2">Hooks</h4>
-                    {entry.content.hooks.map((h, i) => (
-                      <div key={i} className="flex items-center justify-between py-1.5">
-                        <p className="text-white/80 text-sm">"{h.text}"</p>
-                        <CopyBtn text={h.text} />
+                    <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-2">Select a Hook</h4>
+                    {entry.content.hooks.map((h, i) => {
+                      const sel = getSelection(entry.id);
+                      const isSelected = sel.hook === i;
+                      return (
+                        <button key={i} onClick={() => updateSelection(entry.id, 'hook', i)}
+                          className={`w-full text-left py-2.5 px-3 mb-1.5 rounded-2xl flex items-center gap-3 transition-all ${isSelected ? "bg-violet-500/20 border border-violet-400/40" : "bg-white/5 border border-transparent hover:bg-white/10"}`}>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${isSelected ? "bg-violet-500 border-violet-500" : "border-white/25"}`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          <div>
+                            <span className="text-white/40 text-[10px] font-semibold uppercase">{h.style}</span>
+                            <p className="text-white/80 text-sm">"{h.text}"</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Caption — toggle */}
+                  <div>
+                    <button onClick={() => updateSelection(entry.id, 'caption', !getSelection(entry.id).caption)}
+                      className={`w-full text-left rounded-2xl p-3 flex items-start gap-3 transition-all ${getSelection(entry.id).caption ? "bg-cyan-500/15 border border-cyan-400/30" : "bg-white/5 border border-transparent"}`}>
+                      <div className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${getSelection(entry.id).caption ? "bg-cyan-500 border-cyan-500" : "border-white/25"}`}>
+                        {getSelection(entry.id).caption && <Check className="w-3 h-3 text-white" />}
                       </div>
-                    ))}
+                      <div>
+                        <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Caption</h4>
+                        <p className="text-white/70 text-sm whitespace-pre-wrap">{entry.content.caption}</p>
+                      </div>
+                    </button>
                   </div>
 
-                  {/* Caption */}
+                  {/* Hashtags — toggle */}
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide">Caption</h4>
-                      <CopyBtn text={entry.content.caption} label="Copy" />
-                    </div>
-                    <p className="text-white/70 text-sm whitespace-pre-wrap">{entry.content.caption}</p>
-                  </div>
-
-                  {/* Hashtags */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide">Hashtags</h4>
-                      <CopyBtn text={entry.content.hashtags.join(" ")} label="Copy" />
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {entry.content.hashtags.map((t, i) => (
-                        <span key={i} className="bg-purple-400/15 text-purple-200/70 px-2 py-1 rounded-2xl text-xs border border-purple-400/20">{t}</span>
-                      ))}
-                    </div>
+                    <button onClick={() => updateSelection(entry.id, 'hashtags', !getSelection(entry.id).hashtags)}
+                      className={`w-full text-left rounded-2xl p-3 transition-all ${getSelection(entry.id).hashtags ? "bg-purple-500/15 border border-purple-400/30" : "bg-white/5 border border-transparent"}`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${getSelection(entry.id).hashtags ? "bg-purple-500 border-purple-500" : "border-white/25"}`}>
+                          {getSelection(entry.id).hashtags && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide">Hashtags</h4>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 ml-8">
+                        {entry.content.hashtags.map((t, i) => (
+                          <span key={i} className="bg-purple-400/15 text-purple-200/70 px-2 py-1 rounded-2xl text-xs border border-purple-400/20">{t}</span>
+                        ))}
+                      </div>
+                    </button>
                   </div>
 
                   {/* Shot List */}
@@ -1286,99 +1310,92 @@ function GuidedCamera({ shotList, onComplete, onClose }) {
   const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black flex flex-col">
-      {/* Viewfinder */}
-      <div className="flex-1 relative overflow-hidden bg-black">
-        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" playsInline muted autoPlay />
+    <div className="fixed inset-0 z-[200] bg-black">
+      {/* Full-screen camera */}
+      <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" playsInline muted autoPlay />
 
-        {/* Countdown overlay */}
-        {countdown !== null && (
-          <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/40">
-            <div className="w-28 h-28 rounded-full border-4 border-white/80 flex items-center justify-center" style={{ animation: 'pulse 0.7s ease-in-out' }}>
-              <span className="text-white text-6xl font-bold">{countdown}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Camera error */}
-        {cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center p-8 z-30">
-            <div className="text-center">
-              <Camera className="w-12 h-12 text-white/20 mx-auto mb-4" />
-              <p className="text-white/70 font-medium mb-2">Camera Access Required</p>
-              <p className="text-white/40 text-sm">{cameraError}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top)]" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)' }}>
-          <div className="flex items-center justify-between px-5 pt-3 pb-2">
-            <button onClick={onClose} className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center">
-              <X className="w-5 h-5 text-white" />
-            </button>
-            <div className="flex items-center gap-2">
-              {recording && (
-                <div className="flex items-center gap-2 bg-red-500/90 px-3 py-1.5 rounded-full">
-                  <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                  <span className="text-white font-mono text-sm font-bold">{formatTime(timer)}</span>
-                </div>
-              )}
-              {!recording && (
-                <div className="bg-black/40 px-3 py-1.5 rounded-full">
-                  <span className="text-white/80 text-sm font-semibold">{currentShot + 1} / {shotList.length}</span>
-                </div>
-              )}
-            </div>
-            <div className="w-10" />
+      {/* Countdown overlay */}
+      {countdown !== null && (
+        <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/40">
+          <div className="w-28 h-28 rounded-full border-4 border-white/80 flex items-center justify-center" style={{ animation: 'pulse 0.7s ease-in-out' }}>
+            <span className="text-white text-6xl font-bold">{countdown}</span>
           </div>
         </div>
+      )}
 
-        {/* Recording progress bar */}
-        {recording && (
-          <div className="absolute top-0 left-0 right-0 z-30 h-1">
-            <div className="h-full bg-red-500 transition-all duration-1000 ease-linear" style={{ width: `${timerProgress * 100}%` }} />
+      {/* Camera error */}
+      {cameraError && (
+        <div className="absolute inset-0 flex items-center justify-center p-8 z-30">
+          <div className="text-center">
+            <Camera className="w-12 h-12 text-white/20 mx-auto mb-4" />
+            <p className="text-white/70 font-medium mb-2">Camera Access Required</p>
+            <p className="text-white/40 text-sm">{cameraError}</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Shot instruction card */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-4" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)' }}>
-          {/* Progress bar */}
-          <div className="flex gap-1.5 mb-4">
-            {shotList.map((_, i) => (
-              <div key={i} className="flex-1 h-1 rounded-full overflow-hidden bg-white/20">
-                <div className={`h-full rounded-full transition-all duration-300 ${
-                  clips.some(c => c.shot === i) ? "bg-green-400 w-full" :
-                  i === currentShot && recording ? "bg-red-400" :
-                  i === currentShot ? "bg-white w-1/4" : "w-0"
-                }`} style={i === currentShot && recording ? { width: `${timerProgress * 100}%` } : undefined} />
+      {/* Recording progress bar */}
+      {recording && (
+        <div className="absolute top-0 left-0 right-0 z-30 h-1">
+          <div className="h-full bg-red-500 transition-all duration-1000 ease-linear" style={{ width: `${timerProgress * 100}%` }} />
+        </div>
+      )}
+
+      {/* Top bar — overlaid on camera */}
+      <div className="absolute top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top)]" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%)' }}>
+        <div className="flex items-center justify-between px-5 pt-3 pb-6">
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+            <X className="w-5 h-5 text-white" />
+          </button>
+          <div className="flex items-center gap-2">
+            {recording ? (
+              <div className="flex items-center gap-2 bg-red-500/90 px-3 py-1.5 rounded-full">
+                <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                <span className="text-white font-mono text-sm font-bold">{formatTime(timer)}</span>
               </div>
-            ))}
+            ) : (
+              <div className="bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                <span className="text-white/80 text-sm font-semibold">{currentShot + 1} / {shotList.length}</span>
+              </div>
+            )}
           </div>
-
-          {/* Instruction */}
-          <div className={`transition-all duration-300 ${showTip ? 'opacity-100 translate-y-0' : 'opacity-60 translate-y-1'}`}>
-            <p className="text-white font-bold text-xl leading-tight mb-1">{shot.description}</p>
-            {showTip && <p className="text-yellow-200/80 text-sm mb-1">{shot.tip}</p>}
-            <p className="text-white/40 text-xs">{shot.duration}</p>
-          </div>
+          <div className="w-10" />
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex-shrink-0 bg-black/95 px-6 py-5 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-between">
-          {/* Left action */}
-          <div className="w-20 flex justify-start">
+      {/* Bottom section — overlaid on camera */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)]" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)' }}>
+        {/* Progress bars */}
+        <div className="flex gap-1.5 px-5 mb-4">
+          {shotList.map((_, i) => (
+            <div key={i} className="flex-1 h-1 rounded-full overflow-hidden bg-white/20">
+              <div className={`h-full rounded-full transition-all duration-300 ${
+                clips.some(c => c.shot === i) ? "bg-green-400 w-full" :
+                i === currentShot && recording ? "bg-red-400" :
+                i === currentShot ? "bg-white w-1/4" : "w-0"
+              }`} style={i === currentShot && recording ? { width: `${timerProgress * 100}%` } : undefined} />
+            </div>
+          ))}
+        </div>
+
+        {/* Shot instruction */}
+        <div className={`px-5 mb-5 transition-all duration-300 ${showTip ? 'opacity-100' : 'opacity-60'}`}>
+          <p className="text-white font-bold text-xl leading-tight mb-1">{shot.description}</p>
+          {showTip && <p className="text-yellow-200/80 text-sm mb-1">{shot.tip}</p>}
+          <p className="text-white/40 text-xs">{shot.duration}</p>
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center justify-between px-6 pb-4">
+          <div className="w-24">
             {shotRecorded && !recording && (
-              <button onClick={retakeShot} className="text-white/60 text-sm font-semibold py-2 px-3 rounded-2xl bg-white/10 active:bg-white/20">
+              <button onClick={retakeShot} className="w-24 text-center text-white/80 text-sm font-semibold py-2.5 rounded-2xl bg-white/15 backdrop-blur-sm active:bg-white/25">
                 Retake
               </button>
             )}
           </div>
 
-          {/* Record button */}
-          <div className="flex flex-col items-center gap-2">
+          <div>
             {countdown !== null ? (
               <div className="w-20 h-20 rounded-full border-[5px] border-white/30 flex items-center justify-center">
                 <div className="w-14 h-14 rounded-full bg-red-500/30" />
@@ -1391,7 +1408,7 @@ function GuidedCamera({ shotList, onComplete, onClose }) {
             ) : recording ? (
               <button onClick={stopRecording}
                 className="w-20 h-20 rounded-full border-[5px] border-red-500 flex items-center justify-center active:scale-95 transition-transform" style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>
-                <div className="w-9 h-9 rounded-lg bg-red-500" />
+                <div className="w-9 h-9 rounded-2xl bg-red-500" />
               </button>
             ) : (
               <div className="w-20 h-20 rounded-full border-[5px] border-green-400/50 flex items-center justify-center">
@@ -1400,16 +1417,15 @@ function GuidedCamera({ shotList, onComplete, onClose }) {
             )}
           </div>
 
-          {/* Right action */}
-          <div className="w-20 flex justify-end">
+          <div className="w-24">
             {allDone ? (
               <button onClick={finishFilming}
-                className="text-black text-sm font-bold py-2 px-4 rounded-2xl bg-green-400 active:bg-green-500">
+                className="w-24 text-center text-black text-sm font-bold py-2.5 rounded-2xl bg-green-400 active:bg-green-500">
                 Done
               </button>
             ) : shotRecorded && !recording ? (
               <button onClick={nextShot}
-                className="text-white text-sm font-bold py-2 px-4 rounded-2xl bg-white/15 active:bg-white/25">
+                className="w-24 text-center text-white text-sm font-bold py-2.5 rounded-2xl bg-white/15 backdrop-blur-sm active:bg-white/25">
                 Next →
               </button>
             ) : null}
