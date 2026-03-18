@@ -165,7 +165,7 @@ function NavIcon({ src, className, active }) {
 const PRIMARY_TABS = [
   { id: "generate", label: "Generate", customIcon: "/icons/Reward-Stars-2--Streamline-Ultimate.svg" },
   { id: "library", label: "Library", customIcon: "/icons/Archive-Books--Streamline-Ultimate.svg" },
-  { id: "inventory", label: "Inventory", icon: "Home" },
+  { id: "inventory", label: "Inventory", customIcon: "/icons/House-Chimney--Streamline-Ultimate.svg" },
   { id: "calendar", label: "Calendar", customIcon: "/icons/Calendar-Edit-1--Streamline-Ultimate.svg" },
 ];
 
