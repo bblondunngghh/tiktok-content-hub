@@ -130,7 +130,7 @@ app.post('/api/generate', async (req, res) => {
 });
 
 // SPA fallback
-app.get('*', (req, res) => {
+app.get('/{*splat}', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
