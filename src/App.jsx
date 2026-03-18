@@ -205,7 +205,8 @@ function HooksPage() {
       <div className="rounded-2xl overflow-hidden">
         <div className="flex gap-2 overflow-x-auto py-2 px-2">
           {categories.map(c => (
-            <button key={c} onClick={() => setCat(c)}
+            <button key={c} ref={el => { if (cat === c && el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }}
+              onClick={() => setCat(c)}
               className={`flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${cat === c ? "glass-btn-active text-white" : "glass-btn text-white/70"}`}>
               {catLabels[c]}
             </button>
@@ -245,7 +246,8 @@ function CaptionsPage() {
       <div className="rounded-2xl overflow-hidden">
         <div className="flex gap-2 overflow-x-auto py-2 px-2">
           {CAPTION_TEMPLATES.map((t, i) => (
-            <button key={i} onClick={() => { setActive(i); setFields({}); }}
+            <button key={i} ref={el => { if (active === i && el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }}
+              onClick={() => { setActive(i); setFields({}); }}
               className={`flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${active === i ? "glass-btn-active text-white" : "glass-btn text-white/70"}`}>
               {t.name}
             </button>
