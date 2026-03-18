@@ -97,12 +97,12 @@ const HASHTAG_SETS = {
 };
 
 const WEEKLY_SCHEDULE = [
-  { day: "Monday", type: "Home Tour", icon: "Home", color: "bg-blue-500", desc: "Full walkthrough of a home. Start with the most impressive feature. 60-90 seconds.", bestTime: "11 AM - 1 PM" },
-  { day: "Tuesday", type: "Myth Buster", icon: "Zap", color: "bg-orange-500", desc: "Address one misconception about manufactured homes with proof. 30-60 seconds.", bestTime: "12 PM - 3 PM" },
-  { day: "Wednesday", type: "Before & After", icon: "Sparkles", color: "bg-purple-500", desc: "Setup process, customization, or lifestyle content. Show the transformation. 45-90 seconds.", bestTime: "7 PM - 9 PM" },
-  { day: "Thursday", type: "Behind the Scenes", icon: "Camera", color: "bg-green-500", desc: "Day in your life selling homes. Relatable, authentic, raw. 30-60 seconds.", bestTime: "12 PM - 3 PM" },
-  { day: "Friday", type: "Customer Story", icon: "Star", color: "bg-pink-500", desc: "Testimonial, buyer reaction, Q&A from comments. Emotional and engaging. 60-120 seconds.", bestTime: "11 AM - 1 PM" },
-  { day: "Sat/Sun", type: "Engage & Go Live", icon: "MessageCircle", color: "bg-gray-500", desc: "Reply to comments, engage with niche creators, go live for Q&A. No new posts needed.", bestTime: "10 AM - 12 PM" },
+  { day: "Monday", type: "Home Tour", customIcon: "/icons/House-Chimney--Streamline-Ultimate.svg", color: "bg-blue-500", desc: "Full walkthrough of a home. Start with the most impressive feature. 60-90 seconds.", bestTime: "11 AM - 1 PM" },
+  { day: "Tuesday", type: "Myth Buster", customIcon: "/icons/Factory-Industrial-Robot-Arm-1--Streamline-Ultimate.svg", color: "bg-orange-500", desc: "Address one misconception about manufactured homes with proof. 30-60 seconds.", bestTime: "12 PM - 3 PM" },
+  { day: "Wednesday", type: "Before & After", customIcon: "/icons/Reward-Stars-2--Streamline-Ultimate.svg", color: "bg-purple-500", desc: "Setup process, customization, or lifestyle content. Show the transformation. 45-90 seconds.", bestTime: "7 PM - 9 PM" },
+  { day: "Thursday", type: "Behind the Scenes", customIcon: "/icons/Video-Player-Movie--Streamline-Ultimate.svg", color: "bg-green-500", desc: "Day in your life selling homes. Relatable, authentic, raw. 30-60 seconds.", bestTime: "12 PM - 3 PM" },
+  { day: "Friday", type: "Customer Story", customIcon: "/icons/Shipment-Star--Streamline-Ultimate.svg", color: "bg-pink-500", desc: "Testimonial, buyer reaction, Q&A from comments. Emotional and engaging. 60-120 seconds.", bestTime: "11 AM - 1 PM" },
+  { day: "Sat/Sun", type: "Engage & Go Live", customIcon: "/icons/Subtitles--Streamline-Ultimate.svg", color: "bg-gray-500", desc: "Reply to comments, engage with niche creators, go live for Q&A. No new posts needed.", bestTime: "10 AM - 12 PM" },
 ];
 
 const VIDEO_FORMULAS = [
@@ -370,7 +370,7 @@ function CalendarPage() {
             <div key={i} className="glass-subtle rounded-2xl p-5 hover:bg-white/20 transition-all">
               <div className="flex items-start gap-4">
                 <div className={`${day.color} bg-opacity-80 w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0`}>
-                  <DynIcon name={day.icon} className="w-6 h-6 text-white" />
+                  {day.customIcon ? <img src={day.customIcon} alt="" className="w-6 h-6 invert" /> : <DynIcon name={day.icon} className="w-6 h-6 text-white" />}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
