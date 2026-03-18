@@ -3,8 +3,7 @@
 @tailwind utilities;
 
 html {
-  background: #0a0a0a url('/bg.jpg') no-repeat center center fixed;
-  background-size: cover;
+  background: #0a0a0a;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -19,8 +18,7 @@ html, body {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: transparent;
-  position: relative;
+  background: #0a0a0a;
 }
 
 #root {
@@ -28,9 +26,23 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: -60px;
+  padding-bottom: 60px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.65);
+}
+
+#root::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  left: -60px;
+  right: -60px;
+  bottom: -60px;
+  background: url('/bg.jpg') no-repeat center center;
+  background-size: cover;
+  opacity: 0.35;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* Hide scrollbar */
