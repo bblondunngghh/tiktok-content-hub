@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send, Settings, X, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send, Settings, X, Eye, EyeOff, CheckCircle, Trash2, CalendarPlus, FolderOpen } from "lucide-react";
 
 // ─── DATA ───────────────────────────────────────────────────────────
 const HOOKS = {
@@ -141,7 +141,7 @@ const POST_CHECKLIST = [
 ];
 
 // ─── ICON MAP ───────────────────────────────────────────────────────
-const IconMap = { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send, Settings, X, Eye, EyeOff, CheckCircle };
+const IconMap = { Camera, Copy, Check, ChevronRight, Sparkles, Calendar, Hash, Type, Film, MessageCircle, BarChart3, Zap, RefreshCw, Clock, Target, TrendingUp, CheckCircle2, ArrowRight, Star, Home, BookOpen, Lightbulb, Link, Loader2, Video, ListOrdered, Send, Settings, X, Eye, EyeOff, CheckCircle, Trash2, CalendarPlus, FolderOpen };
 const DynIcon = ({ name, ...props }) => { const I = IconMap[name]; return I ? <I {...props} /> : null; };
 
 // ─── COPY BUTTON ────────────────────────────────────────────────────
@@ -163,6 +163,7 @@ function NavIcon({ src, className }) {
 // ─── NAV ─────────────────────────────────────────────────────────────
 const TABS = [
   { id: "generate", label: "Generate", icon: "Sparkles" },
+  { id: "library", label: "Library", icon: "FolderOpen" },
   { id: "hooks", label: "Hooks", customIcon: "/icons/Factory-Industrial-Robot-Arm-1--Streamline-Ultimate.svg" },
   { id: "captions", label: "Captions", customIcon: "/icons/Subtitles--Streamline-Ultimate.svg" },
   { id: "hashtags", label: "Hashtags", icon: "Hash" },
@@ -325,34 +326,67 @@ function HashtagsPage() {
 
 // ─── CALENDAR PAGE ──────────────────────────────────────────────────
 function CalendarPage() {
+  const library = getLibrary();
+  const scheduled = library.filter(e => e.scheduled);
+
+  // Group scheduled content by day
+  const byDay = {};
+  scheduled.forEach(e => {
+    const d = e.scheduled.day;
+    if (!byDay[d]) byDay[d] = [];
+    byDay[d].push(e);
+  });
+
   return (
     <div className="space-y-6">
       <div className="glass rounded-2xl p-6 min-h-[180px] border-emerald-500/30 bg-gradient-to-r from-emerald-500/30 to-teal-500/30">
         <h2 className="text-2xl font-bold mb-2 text-white">Weekly Content Calendar</h2>
         <p className="text-white/70">5 posts per week. Consistency trains the algorithm. Each day has a theme so you never wonder what to post.</p>
+        {scheduled.length > 0 && (
+          <p className="text-emerald-300/70 text-sm mt-2">{scheduled.length} post{scheduled.length !== 1 ? "s" : ""} scheduled this week</p>
+        )}
       </div>
 
       <div className="grid gap-4">
-        {WEEKLY_SCHEDULE.map((day, i) => (
-          <div key={i} className="glass-subtle rounded-2xl p-5 hover:bg-white/20 transition-all">
-            <div className="flex items-start gap-4">
-              <div className={`${day.color} bg-opacity-80 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0`}>
-                <DynIcon name={day.icon} className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="font-bold text-white text-lg">{day.day}</h3>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${day.color} bg-opacity-80 text-white`}>{day.type}</span>
+        {WEEKLY_SCHEDULE.map((day, i) => {
+          const dayPosts = byDay[day.day] || [];
+          return (
+            <div key={i} className="glass-subtle rounded-2xl p-5 hover:bg-white/20 transition-all">
+              <div className="flex items-start gap-4">
+                <div className={`${day.color} bg-opacity-80 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0`}>
+                  <DynIcon name={day.icon} className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-white/60 mb-2">{day.desc}</p>
-                <div className="flex items-center gap-1.5 text-sm text-white/40">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>Best time: <span className="font-semibold text-white/70">{day.bestTime} EST</span></span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-bold text-white text-lg">{day.day}</h3>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${day.color} bg-opacity-80 text-white`}>{day.type}</span>
+                  </div>
+                  <p className="text-white/60 mb-2">{day.desc}</p>
+                  <div className="flex items-center gap-1.5 text-sm text-white/40">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Best time: <span className="font-semibold text-white/70">{day.bestTime} EST</span></span>
+                  </div>
                 </div>
               </div>
+
+              {dayPosts.length > 0 && (
+                <div className="mt-4 ml-16 space-y-2">
+                  {dayPosts.map(post => (
+                    <div key={post.id} className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-emerald-200 text-sm font-medium truncate">{post.content.homeSummary}</p>
+                          <p className="text-emerald-300/50 text-xs mt-0.5">{post.scheduled.time}</p>
+                        </div>
+                        <CopyBtn text={post.content.caption} label="Copy" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -492,6 +526,30 @@ function ChecklistPage() {
   );
 }
 
+// ─── CONTENT LIBRARY (localStorage) ─────────────────────────────────
+function getLibrary() {
+  try { return JSON.parse(localStorage.getItem("content-library") || "[]"); } catch { return []; }
+}
+function saveToLibrary(content, url) {
+  const lib = getLibrary();
+  const entry = { id: Date.now().toString(), url, content, savedAt: new Date().toISOString(), scheduled: null };
+  lib.unshift(entry);
+  localStorage.setItem("content-library", JSON.stringify(lib));
+  return entry;
+}
+function deleteFromLibrary(id) {
+  const lib = getLibrary().filter(e => e.id !== id);
+  localStorage.setItem("content-library", JSON.stringify(lib));
+}
+function scheduleContent(id, day, time) {
+  const lib = getLibrary().map(e => e.id === id ? { ...e, scheduled: { day, time } } : e);
+  localStorage.setItem("content-library", JSON.stringify(lib));
+}
+function unscheduleContent(id) {
+  const lib = getLibrary().map(e => e.id === id ? { ...e, scheduled: null } : e);
+  localStorage.setItem("content-library", JSON.stringify(lib));
+}
+
 // ─── LLM SETTINGS ───────────────────────────────────────────────────
 const PROVIDERS = [
   { id: "openai", name: "ChatGPT (OpenAI)", placeholder: "sk-...", keyUrl: "https://platform.openai.com/api-keys" },
@@ -581,6 +639,194 @@ function SettingsModal({ open, onClose }) {
   );
 }
 
+// ─── SCHEDULE MODAL ─────────────────────────────────────────────────
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const TIMES = ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM", "9:00 PM"];
+
+function ScheduleModal({ open, onClose, onSchedule }) {
+  const [day, setDay] = useState("Monday");
+  const [time, setTime] = useState("11:00 AM");
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="glass rounded-2xl p-6 w-full max-w-sm relative z-10" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-white font-bold text-lg">Schedule Post</h3>
+          <button onClick={onClose} className="text-white/40 hover:text-white"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-white/50 uppercase tracking-wide block mb-2">Day</label>
+            <div className="grid grid-cols-4 gap-2">
+              {DAYS.map(d => (
+                <button key={d} onClick={() => setDay(d)}
+                  className={`py-2 rounded-xl text-xs font-medium transition-all ${day === d ? "glass-btn-active text-white" : "glass-subtle text-white/50"}`}>
+                  {d.slice(0, 3)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-white/50 uppercase tracking-wide block mb-2">Time</label>
+            <select value={time} onChange={e => setTime(e.target.value)}
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-sm text-white outline-none focus:ring-2 focus:ring-fuchsia-400/50">
+              {TIMES.map(t => <option key={t} value={t} className="bg-gray-900">{t}</option>)}
+            </select>
+          </div>
+          <button onClick={() => { onSchedule(day, time); onClose(); }}
+            className="w-full py-3 rounded-xl glass-btn-active text-white font-semibold hover:bg-white/30 transition-all flex items-center justify-center gap-2">
+            <CalendarPlus className="w-4 h-4" /> Schedule for {day} at {time}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── LIBRARY PAGE ───────────────────────────────────────────────────
+function LibraryPage() {
+  const [library, setLibrary] = useState(getLibrary());
+  const [expanded, setExpanded] = useState(null);
+  const [scheduleId, setScheduleId] = useState(null);
+
+  const refresh = () => setLibrary(getLibrary());
+
+  const handleDelete = (id) => {
+    deleteFromLibrary(id);
+    refresh();
+  };
+
+  const handleSchedule = (id, day, time) => {
+    scheduleContent(id, day, time);
+    refresh();
+  };
+
+  const handleUnschedule = (id) => {
+    unscheduleContent(id);
+    refresh();
+  };
+
+  return (
+    <div className="space-y-6">
+      <ScheduleModal
+        open={!!scheduleId}
+        onClose={() => setScheduleId(null)}
+        onSchedule={(day, time) => handleSchedule(scheduleId, day, time)}
+      />
+
+      <div className="glass rounded-2xl p-6 min-h-[180px] border-blue-500/30 bg-gradient-to-r from-blue-500/30 to-indigo-500/30">
+        <h2 className="text-2xl font-bold mb-2 text-white">Content Library</h2>
+        <p className="text-white/70">All your generated content in one place. Schedule posts, copy content, or generate more.</p>
+        <p className="text-white/40 text-sm mt-2">{library.length} {library.length === 1 ? "listing" : "listings"} saved</p>
+      </div>
+
+      {library.length === 0 ? (
+        <div className="glass-subtle rounded-2xl p-12 text-center">
+          <FolderOpen className="w-12 h-12 text-white/20 mx-auto mb-4" />
+          <p className="text-white/50 font-medium">No saved content yet</p>
+          <p className="text-white/30 text-sm mt-1">Generate content from a listing and save it here</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {library.map((entry) => (
+            <div key={entry.id} className="glass-subtle rounded-2xl overflow-hidden">
+              <button
+                onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
+                className="w-full p-5 text-left flex items-center justify-between"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold truncate">{entry.content.homeSummary}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-white/30 text-xs">{new Date(entry.savedAt).toLocaleDateString()}</span>
+                    {entry.scheduled && (
+                      <span className="text-xs font-medium text-emerald-300/80 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        {entry.scheduled.day} {entry.scheduled.time}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight className={`w-5 h-5 text-white/30 transition-transform flex-shrink-0 ml-3 ${expanded === entry.id ? "rotate-90" : ""}`} />
+              </button>
+
+              {expanded === entry.id && (
+                <div className="px-5 pb-5 space-y-4 border-t border-white/5 pt-4">
+                  {/* Hooks */}
+                  <div>
+                    <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-2">Hooks</h4>
+                    {entry.content.hooks.map((h, i) => (
+                      <div key={i} className="flex items-center justify-between py-1.5">
+                        <p className="text-white/80 text-sm">"{h.text}"</p>
+                        <CopyBtn text={h.text} />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Caption */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide">Caption</h4>
+                      <CopyBtn text={entry.content.caption} label="Copy" />
+                    </div>
+                    <p className="text-white/70 text-sm whitespace-pre-wrap">{entry.content.caption}</p>
+                  </div>
+
+                  {/* Hashtags */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide">Hashtags</h4>
+                      <CopyBtn text={entry.content.hashtags.join(" ")} label="Copy" />
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {entry.content.hashtags.map((t, i) => (
+                        <span key={i} className="bg-purple-400/15 text-purple-200/70 px-2 py-1 rounded-xl text-xs border border-purple-400/20">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Shot List */}
+                  <div>
+                    <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-2">Shot List</h4>
+                    {entry.content.shotList.map((s, i) => (
+                      <div key={i} className="flex items-start gap-2 py-1">
+                        <span className="text-orange-300/60 text-xs font-bold mt-0.5">{s.shot}.</span>
+                        <div>
+                          <p className="text-white/70 text-sm">{s.description}</p>
+                          <p className="text-white/30 text-xs">{s.duration} — {s.tip}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2">
+                    {entry.scheduled ? (
+                      <button onClick={() => handleUnschedule(entry.id)}
+                        className="flex-1 py-2.5 rounded-xl glass-btn text-amber-300/80 text-sm font-medium flex items-center justify-center gap-2 hover:text-amber-200">
+                        <X className="w-3.5 h-3.5" /> Unschedule
+                      </button>
+                    ) : (
+                      <button onClick={() => setScheduleId(entry.id)}
+                        className="flex-1 py-2.5 rounded-xl glass-btn-active text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-white/30">
+                        <CalendarPlus className="w-3.5 h-3.5" /> Schedule
+                      </button>
+                    )}
+                    <button onClick={() => handleDelete(entry.id)}
+                      className="py-2.5 px-4 rounded-xl glass-btn text-red-300/60 text-sm font-medium flex items-center justify-center gap-2 hover:text-red-300">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── GENERATE PAGE ──────────────────────────────────────────────────
 function GeneratePage() {
   const [url, setUrl] = useState("");
@@ -588,6 +834,7 @@ function GeneratePage() {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const settings = getSettings();
   const hasKey = settings.apiKey && settings.apiKey.length > 5;
@@ -767,24 +1014,83 @@ function GeneratePage() {
             </div>
           </div>
 
-          {/* Generate Again */}
-          <button
-            onClick={() => { setResult(null); setUrl(""); }}
-            className="glass-btn w-full py-3 rounded-2xl text-white/70 font-medium hover:text-white transition-all text-center"
-          >
-            Generate for Another Listing
-          </button>
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                saveToLibrary(result, url);
+                setSaved(true);
+                setTimeout(() => setSaved(false), 2000);
+              }}
+              className={`flex-1 py-3 rounded-2xl font-medium transition-all text-center flex items-center justify-center gap-2 ${saved ? "bg-green-500/20 text-green-300 border border-green-500/30" : "glass-btn-active text-white hover:bg-white/30"}`}
+            >
+              {saved ? <><CheckCircle className="w-4 h-4" /> Saved to Library!</> : <><BookOpen className="w-4 h-4" /> Save to Library</>}
+            </button>
+            <button
+              onClick={() => { setResult(null); setUrl(""); }}
+              className="flex-1 glass-btn py-3 rounded-2xl text-white/70 font-medium hover:text-white transition-all text-center"
+            >
+              Generate Another
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
+// ─── NOTIFICATION HOOK ──────────────────────────────────────────────
+function usePostReminders() {
+  useEffect(() => {
+    // Request notification permission on mount
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
+    const interval = setInterval(() => {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+      const now = new Date();
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const currentDay = dayNames[now.getDay()];
+
+      const library = getLibrary();
+      library.forEach(entry => {
+        if (!entry.scheduled || entry.scheduled.day !== currentDay) return;
+
+        // Parse scheduled time
+        const [timePart, ampm] = entry.scheduled.time.split(" ");
+        let [hours, minutes] = timePart.split(":").map(Number);
+        if (ampm === "PM" && hours !== 12) hours += 12;
+        if (ampm === "AM" && hours === 12) hours = 0;
+
+        const scheduledMinute = hours * 60 + minutes;
+        const currentMinute = now.getHours() * 60 + now.getMinutes();
+
+        // Notify if within 1 minute of scheduled time
+        if (Math.abs(currentMinute - scheduledMinute) <= 1) {
+          const notifKey = `notified-${entry.id}-${currentDay}`;
+          if (!sessionStorage.getItem(notifKey)) {
+            sessionStorage.setItem(notifKey, "true");
+            new Notification("Time to Post!", {
+              body: entry.content.homeSummary,
+              icon: "/favicon.svg",
+            });
+          }
+        }
+      });
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+}
+
 // ─── MAIN APP ───────────────────────────────────────────────────────
 export default function App() {
   const [tab, setTab] = useState("generate");
+  usePostReminders();
 
-  const pages = { generate: GeneratePage, hooks: HooksPage, captions: CaptionsPage, hashtags: HashtagsPage, calendar: CalendarPage, formulas: FormulasPage, algorithm: AlgorithmPage, checklist: ChecklistPage };
+  const pages = { generate: GeneratePage, library: LibraryPage, hooks: HooksPage, captions: CaptionsPage, hashtags: HashtagsPage, calendar: CalendarPage, formulas: FormulasPage, algorithm: AlgorithmPage, checklist: ChecklistPage };
   const Page = pages[tab];
 
   const tabsRef = useRef({});
