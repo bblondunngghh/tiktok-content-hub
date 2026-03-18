@@ -316,7 +316,7 @@ function HashtagsPage() {
             </div>
             <div className="flex flex-wrap gap-1.5">
               {tags.map((t, i) => (
-                <span key={i} className="text-xs bg-white/10 text-white/80 px-2 py-1 rounded-full">{t}</span>
+                <span key={i} className="text-xs bg-white/10 text-white/80 px-2 py-1 rounded-2xl">{t}</span>
               ))}
             </div>
           </div>
@@ -331,7 +331,7 @@ function HashtagsPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {combined.map((t, i) => (
-              <span key={i} className="bg-purple-400/20 text-purple-200 px-3 py-1.5 rounded-full text-sm font-medium border border-purple-400/30">{t}</span>
+              <span key={i} className="bg-purple-400/20 text-purple-200 px-3 py-1.5 rounded-2xl text-sm font-medium border border-purple-400/30">{t}</span>
             ))}
           </div>
         </div>
@@ -375,7 +375,7 @@ function CalendarPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
                     <h3 className="font-bold text-white text-lg">{day.day}</h3>
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${day.color} bg-opacity-80 text-white`}>{day.type}</span>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-2xl ${day.color} bg-opacity-80 text-white`}>{day.type}</span>
                   </div>
                   <p className="text-white/60 mb-2">{day.desc}</p>
                   <div className="flex items-center gap-1.5 text-sm text-white/40">
@@ -464,7 +464,7 @@ function AlgorithmPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-bold text-white">{tip.metric}</h3>
-                  <span className="text-xs font-bold bg-green-400/20 text-green-300 px-2 py-0.5 rounded-full border border-green-400/30">{tip.target}</span>
+                  <span className="text-xs font-bold bg-green-400/20 text-green-300 px-2 py-0.5 rounded-2xl border border-green-400/30">{tip.target}</span>
                 </div>
                 <p className="text-white/60 text-sm leading-relaxed">{tip.desc}</p>
               </div>
@@ -808,7 +808,7 @@ function LibraryPage() {
                   <div className="flex items-center gap-3 mt-1">
                     <span className="text-white/30 text-xs">{new Date(entry.savedAt).toLocaleDateString()}</span>
                     {entry.scheduled && (
-                      <span className="text-xs font-medium text-emerald-300/80 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      <span className="text-xs font-medium text-emerald-300/80 bg-emerald-500/15 px-2 py-0.5 rounded-2xl border border-emerald-500/20">
                         {entry.scheduled.day} {entry.scheduled.time}
                       </span>
                     )}
