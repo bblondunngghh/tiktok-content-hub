@@ -844,7 +844,7 @@ function LibraryPage() {
                   <div>
                     <button onClick={() => updateSelection(entry.id, 'caption', !getSelection(entry.id).caption)}
                       className={`w-full text-left rounded-2xl p-3 flex items-start gap-3 transition-all ${getSelection(entry.id).caption ? "bg-cyan-500/15 border border-cyan-400/30" : "bg-white/5 border border-transparent"}`}>
-                      <div className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${getSelection(entry.id).caption ? "bg-cyan-500 border-cyan-500" : "border-white/25"}`}>
+                      <div className={`w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${getSelection(entry.id).caption ? "bg-cyan-500 border-cyan-500" : "border-white/25"}`}>
                         {getSelection(entry.id).caption && <Check className="w-3 h-3 text-white" />}
                       </div>
                       <div>
@@ -859,7 +859,7 @@ function LibraryPage() {
                     <button onClick={() => updateSelection(entry.id, 'hashtags', !getSelection(entry.id).hashtags)}
                       className={`w-full text-left rounded-2xl p-3 transition-all ${getSelection(entry.id).hashtags ? "bg-purple-500/15 border border-purple-400/30" : "bg-white/5 border border-transparent"}`}>
                       <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${getSelection(entry.id).hashtags ? "bg-purple-500 border-purple-500" : "border-white/25"}`}>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${getSelection(entry.id).hashtags ? "bg-purple-500 border-purple-500" : "border-white/25"}`}>
                           {getSelection(entry.id).hashtags && <Check className="w-3 h-3 text-white" />}
                         </div>
                         <h4 className="text-white/50 text-xs font-semibold uppercase tracking-wide">Hashtags</h4>
