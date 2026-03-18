@@ -163,7 +163,7 @@ function NavIcon({ src, className }) {
 // ─── NAV ─────────────────────────────────────────────────────────────
 const TABS = [
   { id: "generate", label: "Generate", customIcon: "/icons/Reward-Stars-2--Streamline-Ultimate.svg" },
-  { id: "library", label: "Library", customIcon: "/icons/Shipment-Star--Streamline-Ultimate.svg" },
+  { id: "library", label: "Library", customIcon: "/icons/Archive-Books--Streamline-Ultimate.svg" },
   { id: "hooks", label: "Hooks", customIcon: "/icons/Factory-Industrial-Robot-Arm-1--Streamline-Ultimate.svg" },
   { id: "captions", label: "Captions", customIcon: "/icons/Subtitles--Streamline-Ultimate.svg" },
   { id: "hashtags", label: "Hashtags", icon: "Hash" },
