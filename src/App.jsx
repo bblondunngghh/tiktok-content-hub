@@ -798,7 +798,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen relative">
-      <div className="glass sticky top-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="sticky top-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center gap-2 mb-3 sm:mb-4" style={{ paddingLeft: `calc(${100 / (TABS.length * 2)}% - 16px)` }}>
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-fuchsia-500/80 to-violet-600/80 flex items-center justify-center border border-white/20">
