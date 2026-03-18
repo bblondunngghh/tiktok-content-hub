@@ -494,8 +494,8 @@ function ChecklistPage() {
 
 // ─── LLM SETTINGS ───────────────────────────────────────────────────
 const PROVIDERS = [
-  { id: "openai", name: "ChatGPT (OpenAI)", placeholder: "sk-..." },
-  { id: "anthropic", name: "Claude (Anthropic)", placeholder: "sk-ant-..." },
+  { id: "openai", name: "ChatGPT (OpenAI)", placeholder: "sk-...", keyUrl: "https://platform.openai.com/api-keys" },
+  { id: "anthropic", name: "Claude (Anthropic)", placeholder: "sk-ant-...", keyUrl: "https://console.anthropic.com/settings/keys" },
 ];
 
 function getSettings() {
@@ -563,7 +563,12 @@ function SettingsModal({ open, onClose }) {
                 {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <p className="text-white/30 text-xs mt-2">Your key is stored locally on this device only. It's never saved on any server.</p>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-white/30 text-xs">Stored locally on this device only.</p>
+              <a href={PROVIDERS.find(p => p.id === provider)?.keyUrl} target="_blank" rel="noopener noreferrer" className="text-fuchsia-300/70 hover:text-fuchsia-200 text-xs font-medium underline underline-offset-2">
+                Get your API key &rarr;
+              </a>
+            </div>
           </div>
 
           <button onClick={handleSave}
