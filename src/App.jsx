@@ -877,7 +877,7 @@ function GeneratePage() {
         ) : (
           <p className="text-white/40 text-xs mb-4">Demo mode — <span className="text-fuchsia-300/70 cursor-pointer hover:text-fuchsia-200 underline underline-offset-2" onClick={() => setShowSettings(true)}>connect your AI</span> for personalized content</p>
         )}
-        <div className="flex gap-2">
+        <div className="flex gap-2 relative z-10">
           <div className="flex-1 relative">
             <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
             <input
@@ -893,7 +893,7 @@ function GeneratePage() {
           <button
             onClick={generate}
             disabled={loading || !url.trim()}
-            className="px-6 rounded-2xl text-white font-semibold flex items-center gap-2 hover:bg-white/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-white/15 border border-white/20 backdrop-blur-sm"
+            className="px-6 rounded-2xl text-white font-semibold flex items-center gap-2 hover:bg-white/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-white/15 border border-white/20 backdrop-blur-sm flex-shrink-0"
             style={{ height: '44px' }}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}

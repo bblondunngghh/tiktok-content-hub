@@ -59,6 +59,7 @@ Return ONLY the JSON, no other text.`;
 
 // Scrape a Clayton Homes listing URL
 async function scrapeListing(url) {
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
   const res = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
