@@ -1940,36 +1940,32 @@ function usePostReminders() {
 function MoreOverlay({ open, onClose, onSelect, activeTab }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-lg mx-3 mb-24 rounded-3xl p-5 animate-in fade-in slide-in-from-bottom-4"
-        style={{
-          backgroundColor: 'rgba(255,255,255,0.12)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white/80">Tools</h2>
-          <button onClick={onClose} className="text-white/40 hover:text-white/70 transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {MORE_TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => { onSelect(t.id); onClose(); }}
-              className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200 ${activeTab === t.id ? 'bg-white/15 text-white' : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'}`}
-            >
-              {t.customIcon ? <NavIcon src={t.customIcon} className="w-7 h-7" active={activeTab === t.id} /> : <DynIcon name={t.icon} className="w-7 h-7" />}
-              <span className="text-[11px] font-medium leading-tight text-center">{t.label}</span>
-            </button>
-          ))}
+    <div className="fixed inset-0 z-40" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute bottom-0 left-0 right-0 z-10" onClick={e => e.stopPropagation()}>
+        <div
+          className="w-full rounded-t-3xl p-5"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderTop: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 -8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
+          }}
+        >
+          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {MORE_TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => { onSelect(t.id); onClose(); }}
+                className={`flex flex-col items-center gap-2 p-4 rounded-2xl transition-all duration-200 ${activeTab === t.id ? 'bg-white/15 text-white' : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'}`}
+              >
+                {t.customIcon ? <NavIcon src={t.customIcon} className="w-7 h-7" active={activeTab === t.id} /> : <DynIcon name={t.icon} className="w-7 h-7" />}
+                <span className="text-[11px] font-medium leading-tight text-center">{t.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
