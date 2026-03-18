@@ -841,7 +841,7 @@ function GeneratePage() {
 
   const generate = async () => {
     if (!url.trim()) return;
-    if (!hasKey) { setShowSettings(true); return; }
+    // Works without API key in demo mode
     setLoading(true);
     setError(null);
     setResult(null);
@@ -875,7 +875,7 @@ function GeneratePage() {
         {hasKey ? (
           <p className="text-green-300/70 text-xs mb-4 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Connected to {PROVIDERS.find(p => p.id === settings.provider)?.name}</p>
         ) : (
-          <p className="text-amber-300/70 text-xs mb-4 cursor-pointer hover:text-amber-200" onClick={() => setShowSettings(true)}>Tap here to connect your AI provider to get started</p>
+          <p className="text-white/40 text-xs mb-4">Demo mode — <span className="text-fuchsia-300/70 cursor-pointer hover:text-fuchsia-200 underline underline-offset-2" onClick={() => setShowSettings(true)}>connect your AI</span> for personalized content</p>
         )}
         <div className="flex gap-2">
           <div className="flex-1 relative">

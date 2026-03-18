@@ -114,16 +114,52 @@ function parseAIResponse(text) {
   return JSON.parse(jsonMatch[0]);
 }
 
+// Demo content for testing without an API key
+function getDemoContent(listingData) {
+  const title = listingData.title || 'Clayton Home';
+  return {
+    homeSummary: `Beautiful ${title} — a stunning manufactured home with modern finishes, open floor plan, and energy-efficient features that prove affordable homeownership is within reach.`,
+    hooks: [
+      { style: "curiosity", text: `Wait until you see what's inside this ${title}... I've shown hundreds of homes and this one still gets me.` },
+      { style: "emotional", text: `She walked in and couldn't believe this was HER home. This is why I do what I do.` },
+      { style: "mythBuster", text: `People say manufactured homes aren't real homes. Walk through this one and say that again.` },
+    ],
+    caption: `This home right here is the reason people are rethinking everything they thought they knew about manufactured homes.\n\nOpen floor plan. Modern kitchen. Spacious bedrooms. And the best part? It's more affordable than you think.\n\nStop scrolling and DM me "HOME" — I'll send you everything you need to know about this one.`,
+    hashtags: ["#ClaytonHomes", "#ManufacturedHomes", "#AffordableHousing", "#FirstTimeHomeBuyer", "#HomeTour", "#DreamHome", "#NewHome2026", "#HomeGoals", "#RealEstateTips", "#FYP"],
+    shotList: [
+      { shot: 1, description: "Exterior wide shot — walk up to the front door", duration: "5-8 sec", tip: "Start with the curb appeal. Film from the street walking toward the home." },
+      { shot: 2, description: "Open the front door — first reveal of the interior", duration: "3-5 sec", tip: "Pause at the door for a beat. Let the viewer anticipate the reveal." },
+      { shot: 3, description: "Pan across the open floor plan living area", duration: "8-10 sec", tip: "Slow, steady pan. Let the space speak for itself." },
+      { shot: 4, description: "Kitchen close-ups — countertops, appliances, island", duration: "8-10 sec", tip: "Kitchens sell homes. Show every detail." },
+      { shot: 5, description: "Master bedroom and bathroom reveal", duration: "10-12 sec", tip: "Save this for the end if it's the showstopper. Build anticipation." },
+      { shot: 6, description: "Closing shot — you on camera with CTA", duration: "5-8 sec", tip: "Look at the camera. 'DM me HOME for details.' Keep it natural." },
+    ],
+    postingStrategy: {
+      bestDay: "Monday",
+      bestTime: "11 AM - 1 PM EST",
+      contentType: "Home Tour",
+      reasoning: "Monday home tours perform best as people start their week dreaming about new beginnings. Late morning catches the lunch-break scroll.",
+    },
+  };
+}
+
 // API endpoint
 app.post('/api/generate', async (req, res) => {
   try {
     const { url, provider, apiKey } = req.body;
 
     if (!url) return res.status(400).json({ error: 'URL is required' });
-    if (!apiKey) return res.status(400).json({ error: 'API key is required. Tap the settings icon to add your key.' });
-    if (!provider) return res.status(400).json({ error: 'Provider is required' });
 
     const listingData = await scrapeListing(url);
+
+    // Demo mode — no API key needed
+    if (!apiKey || apiKey === 'demo') {
+      const content = getDemoContent(listingData);
+      return res.json({ success: true, content });
+    }
+
+    if (!provider) return res.status(400).json({ error: 'Provider is required' });
+
     const prompt = buildPrompt(listingData);
 
     let text;
