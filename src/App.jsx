@@ -149,7 +149,7 @@ function CopyBtn({ text, label = "Copy" }) {
   const [copied, setCopied] = useState(false);
   const copy = () => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   return (
-    <button onClick={copy} className="glass-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white/90 hover:text-white transition-all">
+    <button onClick={copy} className="glass-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-sm font-medium text-white/90 hover:text-white transition-all flex-shrink-0">
       {copied ? <><Check className="w-3.5 h-3.5 text-green-300" /> Copied!</> : <><Copy className="w-3.5 h-3.5 text-white/60" /> {label}</>}
     </button>
   );
@@ -191,11 +191,11 @@ function HooksPage() {
       <div className="glass rounded-2xl p-6 min-h-[180px] border-violet-500/30 bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30">
         <h2 className="text-2xl font-bold mb-2 text-white">Hook Generator</h2>
         <p className="text-white/70 mb-4">The first 3 seconds decide everything. Pick a hook or hit randomize.</p>
-        <button onClick={generateRandom} className="glass-btn-active inline-flex items-center gap-2 px-5 py-2.5 text-white font-semibold rounded-xl hover:bg-white/50 transition-all">
+        <button onClick={generateRandom} className="glass-btn-active inline-flex items-center gap-2 px-5 py-2.5 text-white font-semibold rounded-2xl hover:bg-white/50 transition-all">
           <Sparkles className="w-4 h-4" /> Randomize a Hook
         </button>
         {randomHook && (
-          <div className="mt-4 glass-subtle rounded-xl p-4 flex items-center justify-between gap-4">
+          <div className="mt-4 glass-subtle rounded-2xl p-4 flex items-center justify-between gap-4">
             <p className="text-lg font-medium text-white">"{randomHook}"</p>
             <CopyBtn text={randomHook} />
           </div>
@@ -213,9 +213,11 @@ function HooksPage() {
 
       <div className="grid gap-3">
         {HOOKS[cat].map((hook, i) => (
-          <div key={i} className="glass-subtle rounded-xl p-4 flex items-center justify-between gap-4 hover:bg-white/20 transition-all">
+          <div key={i} className="glass-subtle rounded-2xl p-4 hover:bg-white/20 transition-all">
+            <div className="flex items-center justify-end mb-2">
+              <CopyBtn text={hook} />
+            </div>
             <p className="text-white/90 font-medium">"{hook}"</p>
-            <CopyBtn text={hook} />
           </div>
         ))}
       </div>
@@ -257,11 +259,11 @@ function CaptionsPage() {
               <label className="text-xs font-semibold text-white/50 uppercase tracking-wide">{f.replace(/_/g, " ")}</label>
               <input type="text" value={fields[f] || ""} onChange={e => setFields({ ...fields, [f]: e.target.value })}
                 placeholder={f.replace(/_/g, " ").toLowerCase()}
-                className="mt-1 w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 outline-none" />
+                className="mt-1 w-full px-3 py-2 bg-white/10 border border-white/20 rounded-2xl text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 outline-none" />
             </div>
           ))}
         </div>
-        <div className="glass-subtle rounded-xl p-4 mt-4">
+        <div className="glass-subtle rounded-2xl p-4 mt-4">
           <p className="text-sm text-white/50 font-semibold mb-2 uppercase tracking-wide">Preview</p>
           <p className="text-white/90 whitespace-pre-wrap leading-relaxed">{filled}</p>
         </div>
@@ -353,7 +355,7 @@ function CalendarPage() {
           return (
             <div key={i} className="glass-subtle rounded-2xl p-5 hover:bg-white/20 transition-all">
               <div className="flex items-start gap-4">
-                <div className={`${day.color} bg-opacity-80 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0`}>
+                <div className={`${day.color} bg-opacity-80 w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0`}>
                   <DynIcon name={day.icon} className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
@@ -372,7 +374,7 @@ function CalendarPage() {
               {dayPosts.length > 0 && (
                 <div className="mt-4 ml-16 space-y-2">
                   {dayPosts.map(post => (
-                    <div key={post.id} className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                    <div key={post.id} className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3">
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <p className="text-emerald-200 text-sm font-medium truncate">{post.content.homeSummary}</p>
@@ -408,7 +410,7 @@ function FormulasPage() {
           <div key={i} className="glass-subtle rounded-2xl overflow-hidden hover:bg-white/20 transition-all">
             <button onClick={() => setExpanded(expanded === i ? null : i)} className="w-full p-5 flex items-center justify-between text-left">
               <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-orange-400/20 text-orange-300 font-bold text-sm flex items-center justify-center border border-orange-400/30">{i + 1}</span>
+                <span className="w-8 h-8 rounded-2xl bg-orange-400/20 text-orange-300 font-bold text-sm flex items-center justify-center border border-orange-400/30">{i + 1}</span>
                 <span className="font-bold text-white">{f.name}</span>
               </div>
               <ChevronRight className={`w-5 h-5 text-white/40 transition-transform ${expanded === i ? "rotate-90" : ""}`} />
@@ -416,7 +418,7 @@ function FormulasPage() {
             {expanded === i && (
               <div className="px-5 pb-5 pt-0 border-t border-white/10">
                 <p className="text-white/60 mb-3 leading-relaxed">{f.desc}</p>
-                <div className="bg-orange-400/10 rounded-xl p-3 flex items-start gap-2 border border-orange-400/20">
+                <div className="bg-orange-400/10 rounded-2xl p-3 flex items-start gap-2 border border-orange-400/20">
                   <Lightbulb className="w-4 h-4 text-orange-300 mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-orange-200 font-medium">{f.tip}</p>
                 </div>
@@ -442,7 +444,7 @@ function AlgorithmPage() {
         {ALGORITHM_TIPS.map((tip, i) => (
           <div key={i} className="glass-subtle rounded-2xl p-5 hover:bg-white/20 transition-all">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-400/20 flex items-center justify-center flex-shrink-0 border border-indigo-400/30">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-400/20 flex items-center justify-center flex-shrink-0 border border-indigo-400/30">
                 <DynIcon name={tip.icon} className="w-5 h-5 text-indigo-300" />
               </div>
               <div>
@@ -497,7 +499,7 @@ function ChecklistPage() {
       <div className="space-y-2">
         {POST_CHECKLIST.map((item, i) => (
           <button key={i} onClick={() => toggle(i)}
-            className={`w-full text-left rounded-xl p-4 flex items-center gap-3 transition-all ${checked.has(i) ? "glass-btn-active" : "glass-subtle hover:bg-white/20"}`}>
+            className={`w-full text-left rounded-2xl p-4 flex items-center gap-3 transition-all ${checked.has(i) ? "glass-btn-active" : "glass-subtle hover:bg-white/20"}`}>
             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${checked.has(i) ? "bg-green-400/80 border-green-400/80" : "border-white/30"}`}>
               {checked.has(i) && <Check className="w-3.5 h-3.5 text-white" />}
             </div>
@@ -600,7 +602,7 @@ function SettingsModal({ open, onClose }) {
             <div className="grid grid-cols-2 gap-2">
               {PROVIDERS.map(p => (
                 <button key={p.id} onClick={() => setProvider(p.id)}
-                  className={`p-3 rounded-xl text-sm font-medium transition-all text-center ${provider === p.id ? "glass-btn-active text-white" : "glass-subtle text-white/60 hover:text-white"}`}>
+                  className={`p-3 rounded-2xl text-sm font-medium transition-all text-center ${provider === p.id ? "glass-btn-active text-white" : "glass-subtle text-white/60 hover:text-white"}`}>
                   {p.name}
                 </button>
               ))}
@@ -615,7 +617,7 @@ function SettingsModal({ open, onClose }) {
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
                 placeholder={PROVIDERS.find(p => p.id === provider)?.placeholder}
-                className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-fuchsia-400/50 focus:border-fuchsia-400/50 outline-none"
+                className="w-full px-4 py-3 pr-12 bg-white/10 border border-white/20 rounded-2xl text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-fuchsia-400/50 focus:border-fuchsia-400/50 outline-none"
               />
               <button onClick={() => setShowKey(!showKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
                 {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -630,7 +632,7 @@ function SettingsModal({ open, onClose }) {
           </div>
 
           <button onClick={handleSave}
-            className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${saved ? "bg-green-500/30 text-green-300 border border-green-500/30" : "glass-btn-active text-white hover:bg-white/30"}`}>
+            className={`w-full py-3 rounded-2xl font-semibold transition-all flex items-center justify-center gap-2 ${saved ? "bg-green-500/30 text-green-300 border border-green-500/30" : "glass-btn-active text-white hover:bg-white/30"}`}>
             {saved ? <><CheckCircle className="w-4 h-4" /> Saved!</> : "Save Settings"}
           </button>
         </div>
@@ -662,7 +664,7 @@ function ScheduleModal({ open, onClose, onSchedule }) {
             <div className="grid grid-cols-4 gap-2">
               {DAYS.map(d => (
                 <button key={d} onClick={() => setDay(d)}
-                  className={`py-2 rounded-xl text-xs font-medium transition-all ${day === d ? "glass-btn-active text-white" : "glass-subtle text-white/50"}`}>
+                  className={`py-2 rounded-2xl text-xs font-medium transition-all ${day === d ? "glass-btn-active text-white" : "glass-subtle text-white/50"}`}>
                   {d.slice(0, 3)}
                 </button>
               ))}
@@ -671,12 +673,12 @@ function ScheduleModal({ open, onClose, onSchedule }) {
           <div>
             <label className="text-xs font-semibold text-white/50 uppercase tracking-wide block mb-2">Time</label>
             <select value={time} onChange={e => setTime(e.target.value)}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-sm text-white outline-none focus:ring-2 focus:ring-fuchsia-400/50">
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-sm text-white outline-none focus:ring-2 focus:ring-fuchsia-400/50">
               {TIMES.map(t => <option key={t} value={t} className="bg-gray-900">{t}</option>)}
             </select>
           </div>
           <button onClick={() => { onSchedule(day, time); onClose(); }}
-            className="w-full py-3 rounded-xl glass-btn-active text-white font-semibold hover:bg-white/30 transition-all flex items-center justify-center gap-2">
+            className="w-full py-3 rounded-2xl glass-btn-active text-white font-semibold hover:bg-white/30 transition-all flex items-center justify-center gap-2">
             <CalendarPlus className="w-4 h-4" /> Schedule for {day} at {time}
           </button>
         </div>
@@ -780,7 +782,7 @@ function LibraryPage() {
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {entry.content.hashtags.map((t, i) => (
-                        <span key={i} className="bg-purple-400/15 text-purple-200/70 px-2 py-1 rounded-xl text-xs border border-purple-400/20">{t}</span>
+                        <span key={i} className="bg-purple-400/15 text-purple-200/70 px-2 py-1 rounded-2xl text-xs border border-purple-400/20">{t}</span>
                       ))}
                     </div>
                   </div>
@@ -803,17 +805,17 @@ function LibraryPage() {
                   <div className="flex gap-2 pt-2">
                     {entry.scheduled ? (
                       <button onClick={() => handleUnschedule(entry.id)}
-                        className="flex-1 py-2.5 rounded-xl glass-btn text-amber-300/80 text-sm font-medium flex items-center justify-center gap-2 hover:text-amber-200">
+                        className="flex-1 py-2.5 rounded-2xl glass-btn text-amber-300/80 text-sm font-medium flex items-center justify-center gap-2 hover:text-amber-200">
                         <X className="w-3.5 h-3.5" /> Unschedule
                       </button>
                     ) : (
                       <button onClick={() => setScheduleId(entry.id)}
-                        className="flex-1 py-2.5 rounded-xl glass-btn-active text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-white/30">
+                        className="flex-1 py-2.5 rounded-2xl glass-btn-active text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-white/30">
                         <CalendarPlus className="w-3.5 h-3.5" /> Schedule
                       </button>
                     )}
                     <button onClick={() => handleDelete(entry.id)}
-                      className="py-2.5 px-4 rounded-xl glass-btn text-red-300/60 text-sm font-medium flex items-center justify-center gap-2 hover:text-red-300">
+                      className="py-2.5 px-4 rounded-2xl glass-btn text-red-300/60 text-sm font-medium flex items-center justify-center gap-2 hover:text-red-300">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -933,12 +935,12 @@ function GeneratePage() {
             </h3>
             <div className="space-y-3">
               {result.hooks.map((hook, i) => (
-                <div key={i} className="glass-subtle rounded-xl p-4 flex items-center justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-violet-300/70">{hook.style}</span>
-                    <p className="text-white font-medium mt-0.5">"{hook.text}"</p>
+                <div key={i} className="glass-subtle rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold uppercase tracking-wide text-violet-300">{hook.style}</span>
+                    <CopyBtn text={hook.text} />
                   </div>
-                  <CopyBtn text={hook.text} />
+                  <p className="text-white font-medium">"{hook.text}"</p>
                 </div>
               ))}
             </div>
@@ -952,7 +954,7 @@ function GeneratePage() {
               </h3>
               <CopyBtn text={result.caption} label="Copy Caption" />
             </div>
-            <div className="glass-subtle rounded-xl p-4">
+            <div className="glass-subtle rounded-2xl p-4">
               <p className="text-white/90 whitespace-pre-wrap leading-relaxed">{result.caption}</p>
             </div>
           </div>
@@ -979,9 +981,9 @@ function GeneratePage() {
             </h3>
             <div className="space-y-3">
               {result.shotList.map((shot, i) => (
-                <div key={i} className="glass-subtle rounded-xl p-4">
+                <div key={i} className="glass-subtle rounded-2xl p-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="w-7 h-7 rounded-lg bg-orange-400/20 text-orange-300 font-bold text-xs flex items-center justify-center border border-orange-400/30">{shot.shot}</span>
+                    <span className="w-7 h-7 rounded-2xl bg-orange-400/20 text-orange-300 font-bold text-xs flex items-center justify-center border border-orange-400/30">{shot.shot}</span>
                     <span className="text-white font-semibold flex-1">{shot.description}</span>
                     <span className="text-white/40 text-xs">{shot.duration}</span>
                   </div>
@@ -997,19 +999,19 @@ function GeneratePage() {
               <Calendar className="w-5 h-5 text-emerald-300" /> Posting Strategy
             </h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="glass-subtle rounded-xl p-4 text-center">
+              <div className="glass-subtle rounded-2xl p-4 text-center">
                 <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Best Day</p>
                 <p className="text-white font-bold text-lg">{result.postingStrategy.bestDay}</p>
               </div>
-              <div className="glass-subtle rounded-xl p-4 text-center">
+              <div className="glass-subtle rounded-2xl p-4 text-center">
                 <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Best Time</p>
                 <p className="text-white font-bold text-lg">{result.postingStrategy.bestTime}</p>
               </div>
-              <div className="glass-subtle rounded-xl p-4 text-center">
+              <div className="glass-subtle rounded-2xl p-4 text-center">
                 <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Content Type</p>
                 <p className="text-white font-bold text-lg">{result.postingStrategy.contentType}</p>
               </div>
-              <div className="glass-subtle rounded-xl p-4 col-span-2">
+              <div className="glass-subtle rounded-2xl p-4 col-span-2">
                 <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">Why</p>
                 <p className="text-white/80 text-sm">{result.postingStrategy.reasoning}</p>
               </div>
@@ -1114,7 +1116,7 @@ export default function App() {
       <div className="flex-shrink-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderTop: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), inset 0 0 6px 3px rgba(255,255,255,0.04)' }}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center gap-2 mb-3 sm:mb-4" style={{ paddingLeft: `calc(${100 / (TABS.length * 2)}% - 16px)` }}>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-fuchsia-500/80 to-violet-600/80 flex items-center justify-center border border-white/20">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-fuchsia-500/80 to-violet-600/80 flex items-center justify-center border border-white/20">
               <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
