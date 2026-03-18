@@ -151,6 +151,12 @@ body::before {
   z-index: 1;
 }
 
+/* ─── CAMERA ANIMATIONS ──────────────────────────────────────────── */
+@keyframes recording-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+}
+
 /* ─── GLASS BUTTONS ──────────────────────────────────────────────── */
 .glass-btn {
   background-color: rgba(255, 255, 255, 0.08);

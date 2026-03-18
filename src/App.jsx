@@ -1177,24 +1177,38 @@ function GuidedCamera({ shotList, onComplete, onClose }) {
   const [timer, setTimer] = useState(0);
   const timerRef = useRef(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+  const [showTip, setShowTip] = useState(true);
 
-  // Start camera
+  // Parse target duration from shot (e.g. "5-10 sec" → 10)
+  const getMaxDuration = (shot) => {
+    const match = shot.duration?.match(/(\d+)\s*[-–]\s*(\d+)/);
+    return match ? parseInt(match[2]) : 10;
+  };
+
   useEffect(() => {
     const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
-          audio: true,
-        });
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
+      const configs = [
+        { video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } }, audio: true },
+        { video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1920 } }, audio: true },
+        { video: true, audio: true },
+      ];
+      for (const config of configs) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(config);
+          streamRef.current = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            await videoRef.current.play();
+          }
+          setCameraReady(true);
+          return;
+        } catch (err) {
+          console.warn('Camera config failed:', config, err);
         }
-        setCameraReady(true);
-      } catch (err) {
-        console.error('Camera error:', err);
       }
+      setCameraError('Unable to access camera. Please allow camera permissions in your browser settings.');
     };
     startCamera();
     return () => {
@@ -1203,10 +1217,30 @@ function GuidedCamera({ shotList, onComplete, onClose }) {
     };
   }, []);
 
-  const startRecording = () => {
+  // Countdown then start recording
+  const initiateRecording = () => {
+    if (!streamRef.current) return;
+    setShowTip(false);
+    setCountdown(3);
+    let count = 3;
+    const countInterval = setInterval(() => {
+      count--;
+      if (count === 0) {
+        clearInterval(countInterval);
+        setCountdown(null);
+        actuallyStartRecording();
+      } else {
+        setCountdown(count);
+      }
+    }, 700);
+  };
+
+  const actuallyStartRecording = () => {
     if (!streamRef.current) return;
     const chunks = [];
-    const recorder = new MediaRecorder(streamRef.current, { mimeType: 'video/webm;codecs=vp9,opus' });
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+      ? 'video/webm;codecs=vp9,opus' : 'video/webm';
+    const recorder = new MediaRecorder(streamRef.current, { mimeType });
     recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
     recorder.onstop = () => {
       const blob = new Blob(chunks, { type: 'video/webm' });
@@ -1224,15 +1258,19 @@ function GuidedCamera({ shotList, onComplete, onClose }) {
       mediaRecorderRef.current.stop();
       setRecording(false);
       clearInterval(timerRef.current);
+    }
+  };
 
-      if (currentShot < shotList.length - 1) {
-        setCurrentShot(currentShot + 1);
-      }
+  const nextShot = () => {
+    if (currentShot < shotList.length - 1) {
+      setCurrentShot(currentShot + 1);
+      setShowTip(true);
     }
   };
 
   const retakeShot = () => {
     setClips(prev => prev.filter(c => c.shot !== currentShot));
+    setShowTip(true);
   };
 
   const finishFilming = () => {
@@ -1243,72 +1281,140 @@ function GuidedCamera({ shotList, onComplete, onClose }) {
   const shot = shotList[currentShot];
   const shotRecorded = clips.some(c => c.shot === currentShot);
   const allDone = clips.length === shotList.length;
+  const maxDur = getMaxDuration(shot);
+  const timerProgress = Math.min(timer / maxDur, 1);
   const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   return (
     <div className="fixed inset-0 z-[200] bg-black flex flex-col">
-      {/* Camera viewfinder */}
-      <div className="flex-1 relative overflow-hidden">
-        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" playsInline muted />
+      {/* Viewfinder */}
+      <div className="flex-1 relative overflow-hidden bg-black">
+        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" playsInline muted autoPlay />
 
-        {/* Shot overlay */}
-        <div className="absolute top-0 left-0 right-0 p-4 pt-[env(safe-area-inset-top)]" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
-          <div className="flex items-center justify-between mb-2">
-            <button onClick={onClose} className="text-white/70 text-sm font-medium">Cancel</button>
-            <span className="text-white/50 text-sm">Shot {currentShot + 1} of {shotList.length}</span>
-            {recording && <span className="text-red-400 font-mono text-sm flex items-center gap-1.5">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" /> {formatTime(timer)}
-            </span>}
-          </div>
-          <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-            <p className="text-white font-bold text-base">{shot.description}</p>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="text-white/50 text-xs">{shot.duration}</span>
-              <span className="text-yellow-300/70 text-xs">{shot.tip}</span>
+        {/* Countdown overlay */}
+        {countdown !== null && (
+          <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/40">
+            <div className="w-28 h-28 rounded-full border-4 border-white/80 flex items-center justify-center" style={{ animation: 'pulse 0.7s ease-in-out' }}>
+              <span className="text-white text-6xl font-bold">{countdown}</span>
             </div>
+          </div>
+        )}
+
+        {/* Camera error */}
+        {cameraError && (
+          <div className="absolute inset-0 flex items-center justify-center p-8 z-30">
+            <div className="text-center">
+              <Camera className="w-12 h-12 text-white/20 mx-auto mb-4" />
+              <p className="text-white/70 font-medium mb-2">Camera Access Required</p>
+              <p className="text-white/40 text-sm">{cameraError}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Top bar */}
+        <div className="absolute top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top)]" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)' }}>
+          <div className="flex items-center justify-between px-5 pt-3 pb-2">
+            <button onClick={onClose} className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center">
+              <X className="w-5 h-5 text-white" />
+            </button>
+            <div className="flex items-center gap-2">
+              {recording && (
+                <div className="flex items-center gap-2 bg-red-500/90 px-3 py-1.5 rounded-full">
+                  <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                  <span className="text-white font-mono text-sm font-bold">{formatTime(timer)}</span>
+                </div>
+              )}
+              {!recording && (
+                <div className="bg-black/40 px-3 py-1.5 rounded-full">
+                  <span className="text-white/80 text-sm font-semibold">{currentShot + 1} / {shotList.length}</span>
+                </div>
+              )}
+            </div>
+            <div className="w-10" />
           </div>
         </div>
 
-        {/* Progress dots */}
-        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-          {shotList.map((_, i) => (
-            <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all ${
-              clips.some(c => c.shot === i) ? "bg-green-400" :
-              i === currentShot ? "bg-white" : "bg-white/20"
-            }`} />
-          ))}
+        {/* Recording progress bar */}
+        {recording && (
+          <div className="absolute top-0 left-0 right-0 z-30 h-1">
+            <div className="h-full bg-red-500 transition-all duration-1000 ease-linear" style={{ width: `${timerProgress * 100}%` }} />
+          </div>
+        )}
+
+        {/* Shot instruction card */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-4" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 60%, transparent 100%)' }}>
+          {/* Progress bar */}
+          <div className="flex gap-1.5 mb-4">
+            {shotList.map((_, i) => (
+              <div key={i} className="flex-1 h-1 rounded-full overflow-hidden bg-white/20">
+                <div className={`h-full rounded-full transition-all duration-300 ${
+                  clips.some(c => c.shot === i) ? "bg-green-400 w-full" :
+                  i === currentShot && recording ? "bg-red-400" :
+                  i === currentShot ? "bg-white w-1/4" : "w-0"
+                }`} style={i === currentShot && recording ? { width: `${timerProgress * 100}%` } : undefined} />
+              </div>
+            ))}
+          </div>
+
+          {/* Instruction */}
+          <div className={`transition-all duration-300 ${showTip ? 'opacity-100 translate-y-0' : 'opacity-60 translate-y-1'}`}>
+            <p className="text-white font-bold text-xl leading-tight mb-1">{shot.description}</p>
+            {showTip && <p className="text-yellow-200/80 text-sm mb-1">{shot.tip}</p>}
+            <p className="text-white/40 text-xs">{shot.duration}</p>
+          </div>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="flex-shrink-0 bg-black px-6 py-6 pb-[env(safe-area-inset-bottom)] flex items-center justify-between">
-        {shotRecorded && !recording ? (
-          <button onClick={retakeShot} className="text-white/50 text-sm font-medium">Retake</button>
-        ) : <div className="w-16" />}
+      <div className="flex-shrink-0 bg-black/95 px-6 py-5 pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-center justify-between">
+          {/* Left action */}
+          <div className="w-20 flex justify-start">
+            {shotRecorded && !recording && (
+              <button onClick={retakeShot} className="text-white/60 text-sm font-semibold py-2 px-3 rounded-2xl bg-white/10 active:bg-white/20">
+                Retake
+              </button>
+            )}
+          </div>
 
-        {!shotRecorded && !recording ? (
-          <button onClick={startRecording} disabled={!cameraReady}
-            className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center disabled:opacity-30">
-            <div className="w-12 h-12 rounded-full bg-red-500" />
-          </button>
-        ) : recording ? (
-          <button onClick={stopRecording}
-            className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center">
-            <div className="w-8 h-8 rounded-md bg-red-500" />
-          </button>
-        ) : (
-          <button onClick={startRecording} disabled={!cameraReady}
-            className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center disabled:opacity-30">
-            <div className="w-12 h-12 rounded-full bg-red-500" />
-          </button>
-        )}
+          {/* Record button */}
+          <div className="flex flex-col items-center gap-2">
+            {countdown !== null ? (
+              <div className="w-20 h-20 rounded-full border-[5px] border-white/30 flex items-center justify-center">
+                <div className="w-14 h-14 rounded-full bg-red-500/30" />
+              </div>
+            ) : !shotRecorded && !recording ? (
+              <button onClick={initiateRecording} disabled={!cameraReady}
+                className="w-20 h-20 rounded-full border-[5px] border-white flex items-center justify-center disabled:opacity-30 active:scale-95 transition-transform">
+                <div className="w-14 h-14 rounded-full bg-red-500" />
+              </button>
+            ) : recording ? (
+              <button onClick={stopRecording}
+                className="w-20 h-20 rounded-full border-[5px] border-red-500 flex items-center justify-center active:scale-95 transition-transform" style={{ animation: 'pulse 1.5s ease-in-out infinite' }}>
+                <div className="w-9 h-9 rounded-lg bg-red-500" />
+              </button>
+            ) : (
+              <div className="w-20 h-20 rounded-full border-[5px] border-green-400/50 flex items-center justify-center">
+                <CheckCircle className="w-10 h-10 text-green-400" />
+              </div>
+            )}
+          </div>
 
-        {allDone ? (
-          <button onClick={finishFilming} className="text-emerald-400 text-sm font-bold">Done</button>
-        ) : shotRecorded && !recording ? (
-          <button onClick={() => setCurrentShot(Math.min(currentShot + 1, shotList.length - 1))}
-            className="text-white text-sm font-medium">Next &rarr;</button>
-        ) : <div className="w-16" />}
+          {/* Right action */}
+          <div className="w-20 flex justify-end">
+            {allDone ? (
+              <button onClick={finishFilming}
+                className="text-black text-sm font-bold py-2 px-4 rounded-2xl bg-green-400 active:bg-green-500">
+                Done
+              </button>
+            ) : shotRecorded && !recording ? (
+              <button onClick={nextShot}
+                className="text-white text-sm font-bold py-2 px-4 rounded-2xl bg-white/15 active:bg-white/25">
+                Next →
+              </button>
+            ) : null}
+          </div>
+        </div>
       </div>
     </div>
   );
