@@ -163,17 +163,18 @@ function NavIcon({ src, className, active }) {
 
 // ─── NAV ─────────────────────────────────────────────────────────────
 const PRIMARY_TABS = [
-  { id: "generate", label: "Generate", customIcon: "/icons/Reward-Stars-2--Streamline-Ultimate.svg" },
+  { id: "film", label: "Film", customIcon: "/icons/Reward-Stars-2--Streamline-Ultimate.svg" },
   { id: "library", label: "Library", customIcon: "/icons/Archive-Books--Streamline-Ultimate.svg" },
-  { id: "inventory", label: "Inventory", customIcon: "/icons/House-Chimney--Streamline-Ultimate.svg" },
   { id: "calendar", label: "Calendar", customIcon: "/icons/Calendar-Edit-1--Streamline-Ultimate.svg" },
 ];
 
 const MORE_TABS = [
+  { id: "generate", label: "Generate", customIcon: "/icons/Reward-Stars-2--Streamline-Ultimate.svg" },
+  { id: "inventory", label: "Inventory", customIcon: "/icons/House-Chimney--Streamline-Ultimate.svg" },
   { id: "hooks", label: "Hooks", customIcon: "/icons/Factory-Industrial-Robot-Arm-1--Streamline-Ultimate.svg" },
   { id: "captions", label: "Captions", customIcon: "/icons/Subtitles--Streamline-Ultimate.svg" },
   { id: "hashtags", label: "Hashtags", icon: "Hash" },
-  { id: "formulas", label: "Video Formulas", customIcon: "/icons/Video-Player-Movie--Streamline-Ultimate.svg" },
+  { id: "formulas", label: "Formulas", customIcon: "/icons/Video-Player-Movie--Streamline-Ultimate.svg" },
   { id: "algorithm", label: "Algorithm", customIcon: "/icons/Analytics-Net--Streamline-Ultimate.svg" },
   { id: "checklist", label: "Checklist", customIcon: "/icons/Notes-Checklist-Flip--Streamline-Ultimate.svg" },
 ];
@@ -1684,7 +1685,281 @@ function InventoryPage() {
   );
 }
 
-// ─── GENERATE PAGE ──────────────────────────────────────────────────
+// ─── FILM THIS HOME — SINGLE FLOW WIZARD ────────────────────────────
+function FilmThisHome() {
+  const [step, setStep] = useState(1); // 1=pick home, 2=generating, 3=review, 4=camera, 5=stitching, 6=ready
+  const [url, setUrl] = useState("");
+  const [listings, setListings] = useState([]);
+  const [loadingListings, setLoadingListings] = useState(true);
+  const [search, setSearch] = useState("");
+  const [content, setContent] = useState(null);
+  const [error, setError] = useState(null);
+  const [selectedHook, setSelectedHook] = useState(0);
+  const [selectedCta, setSelectedCta] = useState(CTA_OPTIONS[0].text);
+  const [clips, setClips] = useState([]);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [videoBlob, setVideoBlob] = useState(null);
+
+  // Load inventory on mount
+  useEffect(() => {
+    fetch("/api/listings").then(r => r.json()).then(d => {
+      if (d.success) setListings(d.listings);
+    }).catch(() => {}).finally(() => setLoadingListings(false));
+  }, []);
+
+  const filtered = listings.filter(l => !search || l.modelId.toLowerCase().includes(search.toLowerCase()));
+
+  // Step 1 → 2: Pick home and generate
+  const pickHome = async (homeUrl) => {
+    setUrl(homeUrl);
+    setStep(2);
+    setError(null);
+    try {
+      const settings = getSettings();
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: homeUrl, provider: settings.provider, apiKey: settings.apiKey }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      setContent(data.content);
+      saveToLibrary(data.content, homeUrl);
+      setStep(3);
+    } catch (err) {
+      setError(err.message);
+      setStep(1);
+    }
+  };
+
+  // Step 6: Push to TikTok
+  const pushToTikTok = () => {
+    const hook = content.hooks[selectedHook];
+    const fullCaption = content.caption + "\n\n" + content.hashtags.join(" ");
+    navigator.clipboard.writeText(fullCaption);
+    if (videoUrl) {
+      const a = document.createElement('a');
+      a.href = videoUrl;
+      a.download = 'tiktok-video.webm';
+      a.click();
+    }
+    setTimeout(() => { window.location.href = "tiktok://"; }, 500);
+  };
+
+  const reset = () => {
+    setStep(1);
+    setUrl("");
+    setContent(null);
+    setClips([]);
+    setVideoUrl(null);
+    setVideoBlob(null);
+    setError(null);
+    setSelectedHook(0);
+    setSelectedCta(CTA_OPTIONS[0].text);
+  };
+
+  // ── STEP 1: Pick a home ──
+  if (step === 1) return (
+    <div className="space-y-5">
+      <div className="glass rounded-2xl p-6 min-h-[140px] border-fuchsia-500/30 bg-gradient-to-r from-fuchsia-500/30 to-violet-600/30">
+        <h2 className="text-2xl font-bold mb-1 text-white">Film This Home</h2>
+        <p className="text-white/60 text-sm">Pick a home and we'll handle everything — content, camera, video, and TikTok.</p>
+      </div>
+
+      {error && (
+        <div className="glass-subtle rounded-2xl p-4 border-red-500/30 bg-red-500/10">
+          <p className="text-red-300 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Search or paste URL */}
+      <div className="relative z-10">
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search models or paste a URL..."
+          className="w-full px-4 bg-white/10 border border-white/20 rounded-2xl text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-fuchsia-400/50 outline-none"
+          style={{ height: '48px' }}
+          onKeyDown={e => {
+            if (e.key === "Enter" && search.includes(".")) pickHome(search);
+          }}
+        />
+      </div>
+
+      {/* Quick paste URL button */}
+      {search.includes(".") && (
+        <button onClick={() => pickHome(search)}
+          className="w-full py-3 rounded-2xl bg-fuchsia-500/20 border border-fuchsia-500/30 text-white font-semibold text-sm flex items-center justify-center gap-2 active:bg-fuchsia-500/30">
+          <img src="/icons/Reward-Stars-2--Streamline-Ultimate.svg" alt="" className="w-4 h-4 invert" />
+          Generate for this URL
+        </button>
+      )}
+
+      {/* Inventory list */}
+      {loadingListings ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="w-8 h-8 text-white/20 animate-spin" />
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.slice(0, 30).map(l => (
+            <button key={l.url} onClick={() => pickHome(l.url)}
+              className="w-full text-left rounded-2xl p-4 flex items-center gap-3 glass-subtle hover:bg-white/15 active:bg-white/20 transition-all">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                <img src="/icons/House-Chimney--Streamline-Ultimate.svg" alt="" className="w-5 h-5 invert opacity-50" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium">{l.modelId}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/20" />
+            </button>
+          ))}
+          {filtered.length > 30 && (
+            <p className="text-white/30 text-center text-xs py-2">Search to see more models</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  // ── STEP 2: Generating content ──
+  if (step === 2) return (
+    <div className="flex flex-col items-center justify-center py-20 gap-6">
+      <Loader2 className="w-12 h-12 text-fuchsia-400 animate-spin" />
+      <div className="text-center">
+        <p className="text-white font-bold text-lg">Creating your content...</p>
+        <p className="text-white/40 text-sm mt-1">Analyzing the listing and generating hooks, captions, and shot list</p>
+      </div>
+    </div>
+  );
+
+  // ── STEP 3: Review & customize ──
+  if (step === 3 && content) return (
+    <div className="space-y-5">
+      <div className="glass-subtle rounded-2xl p-4">
+        <p className="text-white/40 text-xs font-semibold uppercase tracking-wide mb-1">Home</p>
+        <p className="text-white font-medium">{content.homeSummary}</p>
+      </div>
+
+      {/* Pick a hook */}
+      <div>
+        <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-3">Pick your hook</p>
+        {content.hooks.map((h, i) => (
+          <button key={i} onClick={() => setSelectedHook(i)}
+            className={`w-full text-left rounded-2xl p-3.5 mb-2 flex items-center gap-3 transition-all ${selectedHook === i ? "bg-violet-500/20 border border-violet-400/40" : "glass-subtle"}`}>
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedHook === i ? "bg-violet-500 border-violet-500" : "border-white/25"}`}>
+              {selectedHook === i && <Check className="w-3 h-3 text-white" />}
+            </div>
+            <div>
+              <span className="text-white/40 text-[10px] font-semibold uppercase">{h.style}</span>
+              <p className="text-white/90 text-sm">{h.text}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Pick CTA */}
+      <div>
+        <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-3">Pick your CTA</p>
+        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+          {CTA_OPTIONS.map((cta, i) => (
+            <button key={i} onClick={() => setSelectedCta(cta.text)}
+              className={`w-full text-left rounded-2xl p-3 flex items-center gap-3 transition-all ${selectedCta === cta.text ? "bg-fuchsia-500/20 border border-fuchsia-400/40" : "glass-subtle"}`}>
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedCta === cta.text ? "bg-fuchsia-500 border-fuchsia-500" : "border-white/25"}`}>
+                {selectedCta === cta.text && <Check className="w-3 h-3 text-white" />}
+              </div>
+              <span className="text-white/80 text-sm">{cta.text}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Caption preview */}
+      <div className="glass-subtle rounded-2xl p-4">
+        <p className="text-white/40 text-xs font-semibold uppercase tracking-wide mb-2">Caption preview</p>
+        <p className="text-white/70 text-sm whitespace-pre-wrap leading-relaxed">{content.caption}</p>
+      </div>
+
+      {/* Start filming */}
+      <button onClick={() => setStep(4)}
+        className="w-full py-4 rounded-2xl bg-white/15 border border-white/20 text-white font-bold text-base flex items-center justify-center gap-3 active:bg-white/25 transition-all">
+        <Camera className="w-5 h-5" /> Start Filming
+      </button>
+    </div>
+  );
+
+  // ── STEP 4: Camera ──
+  if (step === 4 && content) return createPortal(
+    <GuidedCamera
+      shotList={content.shotList}
+      cta={selectedCta}
+      onClose={() => setStep(3)}
+      onComplete={(recordedClips) => {
+        setClips(recordedClips);
+        setStep(5);
+      }}
+    />,
+    document.body
+  );
+
+  // ── STEP 5: Stitching ──
+  if (step === 5 && content) return createPortal(
+    <VideoStitcher
+      clips={clips}
+      content={{ ...content, hooks: [content.hooks[selectedHook]] }}
+      cta={selectedCta}
+      onClose={() => setStep(4)}
+      onComplete={(blob, url) => {
+        setVideoBlob(blob);
+        setVideoUrl(url);
+        setStep(6);
+      }}
+    />,
+    document.body
+  );
+
+  // ── STEP 6: Ready to post ──
+  if (step === 6) return (
+    <div className="space-y-5">
+      <div className="glass rounded-2xl p-6 border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/20">
+        <div className="flex items-center gap-3 mb-2">
+          <CheckCircle className="w-7 h-7 text-green-400" />
+          <h2 className="text-2xl font-bold text-white">Ready to Post</h2>
+        </div>
+        <p className="text-white/60 text-sm">Your video is ready. Tap below to save it and open TikTok with your caption copied.</p>
+      </div>
+
+      {videoUrl && (
+        <video src={videoUrl} controls playsInline className="w-full rounded-2xl" style={{ maxHeight: '50vh' }} />
+      )}
+
+      <div className="glass-subtle rounded-2xl p-4">
+        <p className="text-white/40 text-xs font-semibold uppercase tracking-wide mb-2">Caption (will be copied)</p>
+        <p className="text-white/70 text-sm whitespace-pre-wrap">{content.caption}</p>
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {content.hashtags.map((t, i) => (
+            <span key={i} className="bg-purple-400/15 text-purple-200/70 px-2 py-1 rounded-2xl text-xs border border-purple-400/20">{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <button onClick={pushToTikTok}
+        className="w-full py-4 rounded-2xl text-white font-bold text-base flex items-center justify-center gap-3 bg-gradient-to-r from-pink-500/30 to-violet-500/30 border border-pink-500/30 active:from-pink-500/40 active:to-violet-500/40 transition-all">
+        <Send className="w-5 h-5" /> Save Video & Open TikTok
+      </button>
+
+      <button onClick={reset}
+        className="w-full py-3 rounded-2xl bg-white/10 border border-white/15 text-white/60 font-medium text-sm active:bg-white/20 transition-all">
+        Film Another Home
+      </button>
+    </div>
+  );
+
+  return null;
+}
+
+// ─── GENERATE PAGE (legacy, accessible from More) ───────────────────
 function GeneratePage() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1982,11 +2257,11 @@ function MoreOverlay({ open, onClose, onSelect, activeTab }) {
 
 // ─── MAIN APP ───────────────────────────────────────────────────────
 export default function App() {
-  const [tab, setTab] = useState("generate");
+  const [tab, setTab] = useState("film");
   const [moreOpen, setMoreOpen] = useState(false);
   usePostReminders();
 
-  const pages = { generate: GeneratePage, library: LibraryPage, inventory: InventoryPage, hooks: HooksPage, captions: CaptionsPage, hashtags: HashtagsPage, calendar: CalendarPage, formulas: FormulasPage, algorithm: AlgorithmPage, checklist: ChecklistPage };
+  const pages = { film: FilmThisHome, generate: GeneratePage, library: LibraryPage, inventory: InventoryPage, hooks: HooksPage, captions: CaptionsPage, hashtags: HashtagsPage, calendar: CalendarPage, formulas: FormulasPage, algorithm: AlgorithmPage, checklist: ChecklistPage };
   const Page = pages[tab];
 
   const isMoreTab = MORE_TAB_IDS.has(tab);
