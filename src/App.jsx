@@ -767,7 +767,6 @@ function LibraryPage() {
           }}
         />,
         document.body
-      )
       )}
 
       <div className="glass rounded-2xl p-6 min-h-[180px] border-blue-500/30 bg-gradient-to-r from-blue-500/30 to-indigo-500/30">
