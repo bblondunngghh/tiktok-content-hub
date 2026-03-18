@@ -156,8 +156,8 @@ function CopyBtn({ text, label = "Copy" }) {
 }
 
 // ─── CUSTOM NAV ICON ────────────────────────────────────────────────
-function NavIcon({ src, className }) {
-  return <img src={src} alt="" className={`${className} invert opacity-inherit`} style={{ opacity: 'inherit' }} />;
+function NavIcon({ src, className, active }) {
+  return <img src={src} alt="" className={`${className} invert transition-opacity duration-200`} style={{ opacity: active ? 1 : 0.4 }} />;
 }
 
 // ─── NAV ─────────────────────────────────────────────────────────────
@@ -1125,7 +1125,7 @@ export default function App() {
               {TABS.map(t => (
                 <button key={t.id} ref={el => tabsRef.current[t.id] = el} onClick={() => setTab(t.id)}
                   className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 pb-3 text-xs font-medium transition-colors duration-200 ${tab === t.id ? "text-white" : "text-white/40 hover:text-white/70"}`}>
-                  {t.customIcon ? <NavIcon src={t.customIcon} className="w-6 h-6 sm:w-7 sm:h-7" /> : <DynIcon name={t.icon} className="w-6 h-6 sm:w-7 sm:h-7" />}
+                  {t.customIcon ? <NavIcon src={t.customIcon} className="w-6 h-6 sm:w-7 sm:h-7" active={tab === t.id} /> : <DynIcon name={t.icon} className="w-6 h-6 sm:w-7 sm:h-7" />}
                   <span className="hidden sm:inline text-[10px] leading-tight">{t.label}</span>
                 </button>
               ))}
