@@ -1655,7 +1655,7 @@ function InventoryPage() {
           <div className="grid gap-2">
             {filtered.slice(0, 50).map(l => (
               <button key={l.url} onClick={() => toggleSelect(l.url)}
-                className={`w-full text-left rounded-2xl p-4 flex items-center gap-3 transition-all ${selected.has(l.url) ? "glass-btn-active" : "glass-subtle hover:bg-white/15"}`}>
+                className={`w-full text-left rounded-2xl p-4 flex items-center gap-3 transition-all overflow-hidden ${selected.has(l.url) ? "bg-white/15 border border-emerald-400/40" : "glass-subtle hover:bg-white/15"}`}>
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected.has(l.url) ? "bg-emerald-400/80 border-emerald-400/80" : "border-white/20"}`}>
                   {selected.has(l.url) && <Check className="w-3.5 h-3.5 text-white" />}
                 </div>
