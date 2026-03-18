@@ -1910,6 +1910,8 @@ export default function App() {
 
   return (
     <div className="h-full relative overflow-hidden">
+      {/* Background image — inside #root so it fills the full fixed area */}
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{ background: "url('/bg.jpg') no-repeat center center", backgroundSize: 'cover', opacity: 0.35 }} />
       {/* Header — fixed, glass blur shows content scrolling behind */}
       <div className="fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderTop: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), inset 0 0 6px 3px rgba(255,255,255,0.04)' }}>
         <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">

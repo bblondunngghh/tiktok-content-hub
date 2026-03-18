@@ -2,12 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  background: #0a0a0a;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
   overflow: hidden;
 }
 
@@ -27,27 +31,9 @@ body {
   overflow: hidden;
 }
 
-/* Hide scrollbar but keep scroll */
+/* Hide scrollbar */
 ::-webkit-scrollbar {
   display: none;
-}
-html {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  top: -50px;
-  left: -50px;
-  right: -50px;
-  bottom: -50px;
-  background: url('/bg.jpg') no-repeat center center;
-  background-size: cover;
-  opacity: 0.35;
-  z-index: -1;
-  pointer-events: none;
 }
 
 /* Hide scrollbar on nav tabs but keep scroll */
