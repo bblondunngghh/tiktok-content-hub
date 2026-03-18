@@ -1108,8 +1108,8 @@ export default function App() {
   }, [tab]);
 
   return (
-    <div className="min-h-screen relative">
-      <div className="sticky top-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderTop: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), inset 0 0 6px 3px rgba(255,255,255,0.04)' }}>
+    <div className="h-screen flex flex-col overflow-hidden">
+      <div className="flex-shrink-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderTop: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), inset 0 0 6px 3px rgba(255,255,255,0.04)' }}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center gap-2 mb-3 sm:mb-4" style={{ paddingLeft: `calc(${100 / (TABS.length * 2)}% - 16px)` }}>
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-fuchsia-500/80 to-violet-600/80 flex items-center justify-center border border-white/20">
@@ -1142,12 +1142,14 @@ export default function App() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        <Page />
-      </div>
+      <div className="flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <Page />
+        </div>
 
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 text-center text-xs text-white/30">
-        Sources: Buffer, Sprout Social, Influence4You, Socialync, OpusClip — 2026 TikTok Algorithm Research
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 text-center text-xs text-white/30">
+          Sources: Buffer, Sprout Social, Influence4You, Socialync, OpusClip — 2026 TikTok Algorithm Research
+        </div>
       </div>
     </div>
   );
