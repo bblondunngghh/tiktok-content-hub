@@ -886,13 +886,15 @@ function GeneratePage() {
               onChange={e => setUrl(e.target.value)}
               onKeyDown={e => e.key === "Enter" && generate()}
               placeholder="Paste Clayton Homes listing URL..."
-              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-fuchsia-400/50 focus:border-fuchsia-400/50 outline-none"
+              className="w-full pl-10 pr-4 bg-white/10 border border-white/20 rounded-2xl text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-fuchsia-400/50 focus:border-fuchsia-400/50 outline-none"
+              style={{ height: '44px' }}
             />
           </div>
           <button
             onClick={generate}
             disabled={loading || !url.trim()}
-            className="glass-btn-active px-6 py-3 rounded-2xl text-white font-semibold flex items-center gap-2 hover:bg-white/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-6 rounded-2xl text-white font-semibold flex items-center gap-2 hover:bg-white/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-white/15 border border-white/20 backdrop-blur-sm"
+            style={{ height: '44px' }}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {loading ? "Generating..." : "Generate"}
