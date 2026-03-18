@@ -247,7 +247,7 @@ function CaptionsPage() {
         ))}
       </div>
 
-      <div className="glass rounded-2xl p-6 space-y-4">
+      <div className="glass rounded-2xl px-3 py-5 sm:px-5 space-y-4">
         <h3 className="font-bold text-lg text-white flex items-center gap-2">
           <DynIcon name={tmpl.icon} className="w-5 h-5 text-blue-300" /> {tmpl.name}
         </h3>
@@ -308,7 +308,7 @@ function HashtagsPage() {
       </div>
 
       {combined.length > 0 && (
-        <div className="glass rounded-2xl p-6">
+        <div className="glass rounded-2xl px-3 py-5 sm:px-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-white">Your Hashtag Set ({combined.length} tags)</h3>
             <CopyBtn text={combinedText} label="Copy All" />
@@ -457,7 +457,7 @@ function AlgorithmPage() {
         ))}
       </div>
 
-      <div className="glass rounded-2xl p-6">
+      <div className="glass rounded-2xl px-3 py-5 sm:px-5">
         <h3 className="font-bold text-indigo-200 mb-3 flex items-center gap-2">
           <TrendingUp className="w-5 h-5" /> Weekly Analytics to Track
         </h3>
@@ -510,7 +510,7 @@ function ChecklistPage() {
         Reset Checklist
       </button>
 
-      <div className="glass rounded-2xl p-5">
+      <div className="glass rounded-2xl px-3 py-5 sm:px-5">
         <h3 className="font-bold text-amber-200 mb-3 flex items-center gap-2">
           <MessageCircle className="w-5 h-5" /> After You Post (First 60 Minutes)
         </h3>
@@ -927,7 +927,7 @@ function GeneratePage() {
           </div>
 
           {/* Hooks */}
-          <div className="glass rounded-2xl p-6 border-violet-500/30 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20">
+          <div className="glass rounded-2xl px-3 py-5 sm:px-5 border-violet-500/30 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20">
             <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
               <Zap className="w-5 h-5 text-violet-300" /> Generated Hooks
             </h3>
@@ -945,7 +945,7 @@ function GeneratePage() {
           </div>
 
           {/* Caption */}
-          <div className="glass rounded-2xl p-6 border-cyan-500/30 bg-gradient-to-r from-cyan-500/20 to-blue-500/20">
+          <div className="glass rounded-2xl px-3 py-5 sm:px-5 border-cyan-500/30 bg-gradient-to-r from-cyan-500/20 to-blue-500/20">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-bold text-lg flex items-center gap-2">
                 <Type className="w-5 h-5 text-cyan-300" /> Ready-to-Post Caption
@@ -958,7 +958,7 @@ function GeneratePage() {
           </div>
 
           {/* Hashtags */}
-          <div className="glass rounded-2xl p-6 border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-pink-500/20">
+          <div className="glass rounded-2xl px-3 py-5 sm:px-5 border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-pink-500/20">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-bold text-lg flex items-center gap-2">
                 <Hash className="w-5 h-5 text-purple-300" /> Hashtags
@@ -973,7 +973,7 @@ function GeneratePage() {
           </div>
 
           {/* Shot List */}
-          <div className="glass rounded-2xl p-6 border-orange-500/30 bg-gradient-to-r from-orange-500/20 to-red-500/20">
+          <div className="glass rounded-2xl px-3 py-5 sm:px-5 border-orange-500/30 bg-gradient-to-r from-orange-500/20 to-red-500/20">
             <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
               <Video className="w-5 h-5 text-orange-300" /> Video Shot List
             </h3>
@@ -992,7 +992,7 @@ function GeneratePage() {
           </div>
 
           {/* Posting Strategy */}
-          <div className="glass rounded-2xl p-6 border-emerald-500/30 bg-gradient-to-r from-emerald-500/20 to-teal-500/20">
+          <div className="glass rounded-2xl px-3 py-5 sm:px-5 border-emerald-500/30 bg-gradient-to-r from-emerald-500/20 to-teal-500/20">
             <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-emerald-300" /> Posting Strategy
             </h3>
