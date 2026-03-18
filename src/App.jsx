@@ -1439,24 +1439,21 @@ function GuidedCamera({ shotList, cta, onComplete, onClose }) {
           <button onClick={onClose} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
             <X className="w-5 h-5 text-white" />
           </button>
-          <div className="flex items-center gap-3">
-            {!recording && (
-              <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform">
-                <RefreshCw className="w-5 h-5 text-white" />
-              </button>
-            )}
-            {recording ? (
-              <div className="flex items-center gap-2 bg-red-500/90 px-3 py-1.5 rounded-full">
-                <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <span className="text-white font-mono text-sm font-bold">{formatTime(timer)}</span>
-              </div>
-            ) : (
-              <div className="bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                <span className="text-white/80 text-sm font-semibold">{currentShot + 1} / {shotList.length}</span>
-              </div>
-            )}
-          </div>
-          <div className="w-10" />
+          {recording ? (
+            <div className="flex items-center gap-2 bg-red-500/90 px-3 py-1.5 rounded-full">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+              <span className="text-white font-mono text-sm font-bold">{formatTime(timer)}</span>
+            </div>
+          ) : (
+            <div className="bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
+              <span className="text-white/80 text-sm font-semibold">{currentShot + 1} / {shotList.length}</span>
+            </div>
+          )}
+          {!recording ? (
+            <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform">
+              <RefreshCw className="w-5 h-5 text-white" />
+            </button>
+          ) : <div className="w-10" />}
         </div>
       </div>
 
