@@ -1277,6 +1277,15 @@ function GuidedCamera({ shotList, cta, onComplete, onClose }) {
   const streamRef = useRef(null);
   const [currentShot, setCurrentShot] = useState(0);
   const [recording, setRecording] = useState(false);
+  const [facingMode, setFacingMode] = useState('environment');
+  const startCameraRef = useRef(null);
+
+  const flipCamera = () => {
+    if (recording) return;
+    const newMode = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(newMode);
+    if (startCameraRef.current) startCameraRef.current(newMode);
+  };
   const [clips, setClips] = useState([]);
   const [timer, setTimer] = useState(0);
   const timerRef = useRef(null);
@@ -1292,10 +1301,11 @@ function GuidedCamera({ shotList, cta, onComplete, onClose }) {
   };
 
   useEffect(() => {
-    const startCamera = async () => {
+    const startCamera = async (facing) => {
+      // Stop existing stream
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
       const configs = [
-        { video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } }, audio: true },
-        { video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1920 } }, audio: true },
+        { video: { facingMode: facing, width: { ideal: 1080 }, height: { ideal: 1920 } }, audio: true },
         { video: true, audio: true },
       ];
       for (const config of configs) {
@@ -1307,6 +1317,7 @@ function GuidedCamera({ shotList, cta, onComplete, onClose }) {
             await videoRef.current.play();
           }
           setCameraReady(true);
+          setCameraError(null);
           return;
         } catch (err) {
           console.warn('Camera config failed:', config, err);
@@ -1314,7 +1325,8 @@ function GuidedCamera({ shotList, cta, onComplete, onClose }) {
       }
       setCameraError('Unable to access camera. Please allow camera permissions in your browser settings.');
     };
-    startCamera();
+    startCameraRef.current = startCamera;
+    startCamera(facingMode);
     return () => {
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
       if (timerRef.current) clearInterval(timerRef.current);
@@ -1427,7 +1439,12 @@ function GuidedCamera({ shotList, cta, onComplete, onClose }) {
           <button onClick={onClose} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
             <X className="w-5 h-5 text-white" />
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {!recording && (
+              <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform">
+                <RefreshCw className="w-5 h-5 text-white" />
+              </button>
+            )}
             {recording ? (
               <div className="flex items-center gap-2 bg-red-500/90 px-3 py-1.5 rounded-full">
                 <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
