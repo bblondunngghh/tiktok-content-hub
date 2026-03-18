@@ -906,7 +906,7 @@ function LibraryPage() {
                       </button>
                     ) : entry.content.shotList ? (
                       <button onClick={() => setCtaPickerId(entry.id)}
-                        className="flex-1 py-2.5 rounded-2xl glass-btn-active text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-white/30 bg-gradient-to-r from-red-500/20 to-orange-500/20 border-red-500/30">
+                        className="flex-1 py-2.5 rounded-2xl text-white text-sm font-medium flex items-center justify-center gap-2 bg-white/10 border border-white/15 hover:bg-white/20 active:bg-white/25 transition-all">
                         <Camera className="w-3.5 h-3.5" /> Film
                       </button>
                     ) : null}
