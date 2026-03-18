@@ -938,14 +938,14 @@ function LibraryPage() {
 
 // ─── CTA OPTIONS ────────────────────────────────────────────────────
 const CTA_OPTIONS = [
-  { text: "DM me 'HOME' and I'll send you everything", emoji: "📩" },
-  { text: "Comment 'INFO' below for details", emoji: "💬" },
-  { text: "Link in bio for a virtual tour", emoji: "🔗" },
-  { text: "Follow for more homes like this", emoji: "➕" },
-  { text: "Save this for when you're ready", emoji: "🔖" },
-  { text: "Share this with someone who needs to see it", emoji: "📤" },
-  { text: "Tag someone who's still renting", emoji: "🏷️" },
-  { text: "Drop a 🏠 if you want a walkthrough", emoji: "🏠" },
+  { text: "DM me 'HOME' and I'll send you everything", icon: "Send" },
+  { text: "Comment 'INFO' below for details", icon: "MessageCircle" },
+  { text: "Link in bio for a virtual tour", icon: "Link" },
+  { text: "Follow for more homes like this", icon: "Star" },
+  { text: "Save this for when you're ready", icon: "BookOpen" },
+  { text: "Share this with someone who needs to see it", icon: "ArrowRight" },
+  { text: "Tag someone who's still renting", icon: "Target" },
+  { text: "Drop a comment if you want a walkthrough", icon: "Home" },
 ];
 
 function CTAPicker({ open, onClose, onSelect }) {
@@ -954,9 +954,15 @@ function CTAPicker({ open, onClose, onSelect }) {
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-end justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50" />
       <div className="relative z-10 w-full max-w-lg rounded-t-3xl p-5 pb-[env(safe-area-inset-bottom)]"
-        style={{ backgroundColor: 'rgba(30,30,30,0.95)', backdropFilter: 'blur(12px)' }}
+        style={{
+          backgroundColor: 'rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderTop: '1px solid rgba(255,255,255,0.15)',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 0 6px 3px rgba(255,255,255,0.04)',
+        }}
         onClick={e => e.stopPropagation()}>
         <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
         <h3 className="text-white font-bold text-lg mb-1">Choose Your CTA</h3>
@@ -965,8 +971,10 @@ function CTAPicker({ open, onClose, onSelect }) {
         <div className="space-y-2 max-h-[50vh] overflow-y-auto mb-4">
           {CTA_OPTIONS.map((cta, i) => (
             <button key={i} onClick={() => onSelect(cta.text)}
-              className="w-full text-left rounded-2xl p-3.5 flex items-center gap-3 bg-white/5 border border-white/10 hover:bg-white/10 active:bg-white/15 transition-all">
-              <span className="text-2xl flex-shrink-0">{cta.emoji}</span>
+              className="w-full text-left rounded-2xl p-3.5 flex items-center gap-3 glass-subtle hover:bg-white/15 active:bg-white/20 transition-all">
+              <div className="w-9 h-9 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0">
+                <DynIcon name={cta.icon} className="w-4.5 h-4.5 text-white/70" />
+              </div>
               <span className="text-white/90 text-sm font-medium">{cta.text}</span>
             </button>
           ))}
@@ -982,7 +990,7 @@ function CTAPicker({ open, onClose, onSelect }) {
           />
           {custom.trim() && (
             <button onClick={() => onSelect(custom.trim())}
-              className="px-5 py-3 rounded-2xl bg-fuchsia-500/30 border border-fuchsia-500/40 text-white font-semibold text-sm active:bg-fuchsia-500/50">
+              className="px-5 py-3 rounded-2xl bg-white/15 border border-white/20 text-white font-semibold text-sm active:bg-white/25 transition-all">
               Use
             </button>
           )}
