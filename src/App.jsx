@@ -700,6 +700,7 @@ function LibraryPage() {
   const [expanded, setExpanded] = useState(null);
   const [scheduleId, setScheduleId] = useState(null);
   const [filmingId, setFilmingId] = useState(null);
+  const [stitchingData, setStitchingData] = useState(null); // { id, clips, content }
 
   const refresh = () => setLibrary(getLibrary());
 
@@ -734,15 +735,26 @@ function LibraryPage() {
             shotList={entry.content.shotList}
             onClose={() => setFilmingId(null)}
             onComplete={(clips) => {
-              // Store clip URLs in the library entry
-              const lib = getLibrary().map(e => e.id === filmingId ? { ...e, clips: clips.map(c => c.url) } : e);
-              localStorage.setItem("content-library", JSON.stringify(lib));
               setFilmingId(null);
-              refresh();
+              setStitchingData({ id: entry.id, clips, content: entry.content });
             }}
           />
         );
       })()}
+
+      {stitchingData && (
+        <VideoStitcher
+          clips={stitchingData.clips}
+          content={stitchingData.content}
+          onClose={() => setStitchingData(null)}
+          onComplete={(blob, url) => {
+            const lib = getLibrary().map(e => e.id === stitchingData.id ? { ...e, clips: [url], videoReady: true } : e);
+            localStorage.setItem("content-library", JSON.stringify(lib));
+            setStitchingData(null);
+            refresh();
+          }}
+        />
+      )}
 
       <div className="glass rounded-2xl p-6 min-h-[180px] border-blue-500/30 bg-gradient-to-r from-blue-500/30 to-indigo-500/30">
         <h2 className="text-2xl font-bold mb-2 text-white">Content Library</h2>
@@ -829,11 +841,18 @@ function LibraryPage() {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-2">
-                    {entry.clips ? (
+                    {entry.videoReady ? (
                       <button onClick={() => {
                         const fullCaption = entry.content.caption + "\n\n" + entry.content.hashtags.join(" ");
                         navigator.clipboard.writeText(fullCaption);
-                        window.location.href = "tiktok://";
+                        // Save video to device then open TikTok
+                        if (entry.clips?.[0]) {
+                          const a = document.createElement('a');
+                          a.href = entry.clips[0];
+                          a.download = 'tiktok-video.webm';
+                          a.click();
+                        }
+                        setTimeout(() => { window.location.href = "tiktok://"; }, 500);
                       }}
                         className="flex-1 py-2.5 rounded-2xl text-white text-sm font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500/30 to-violet-500/30 border border-pink-500/30 hover:from-pink-500/40 hover:to-violet-500/40 transition-all">
                         <Send className="w-3.5 h-3.5" /> Push to TikTok
@@ -866,6 +885,283 @@ function LibraryPage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── VIDEO STITCHER WITH TEXT OVERLAYS ───────────────────────────────
+function VideoStitcher({ clips, content, onComplete, onClose }) {
+  const canvasRef = useRef(null);
+  const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [finalBlob, setFinalBlob] = useState(null);
+
+  // Build overlay timeline from content
+  const buildOverlays = (totalDuration) => {
+    const overlays = [];
+    // Hook text — first 3 seconds
+    if (content.hooks?.[0]) {
+      overlays.push({ start: 0, end: 3, text: content.hooks[0].text, style: 'hook', position: 'center' });
+    }
+    // Feature callouts from shot list mid-video
+    if (content.shotList) {
+      let elapsed = 0;
+      content.shotList.forEach((shot, i) => {
+        const clipDur = clips[i] ? 8 : 5; // estimate
+        if (i > 0 && i < content.shotList.length - 1) {
+          const keyword = shot.description.split('—')[0]?.trim() || shot.description;
+          if (keyword.length < 40) {
+            overlays.push({ start: elapsed + 1, end: elapsed + clipDur - 1, text: keyword, style: 'callout', position: 'bottom' });
+          }
+        }
+        elapsed += clipDur;
+      });
+    }
+    // Pattern interrupt at ~40% through
+    const interruptTime = totalDuration * 0.4;
+    overlays.push({ start: interruptTime, end: interruptTime + 2, text: 'Wait for it...', style: 'interrupt', position: 'center' });
+    // CTA at the end
+    overlays.push({ start: totalDuration - 4, end: totalDuration - 0.5, text: 'DM me HOME for details', style: 'cta', position: 'bottom' });
+    return overlays;
+  };
+
+  // Draw text overlay on canvas
+  const drawOverlay = (ctx, overlay, canvasW, canvasH) => {
+    ctx.save();
+    const fontSize = overlay.style === 'hook' ? Math.round(canvasW * 0.06) :
+                     overlay.style === 'cta' ? Math.round(canvasW * 0.055) :
+                     overlay.style === 'interrupt' ? Math.round(canvasW * 0.07) :
+                     Math.round(canvasW * 0.04);
+
+    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+    ctx.textAlign = 'center';
+
+    const maxWidth = canvasW * 0.85;
+    const words = overlay.text.split(' ');
+    const lines = [];
+    let currentLine = '';
+    words.forEach(word => {
+      const testLine = currentLine ? currentLine + ' ' + word : word;
+      if (ctx.measureText(testLine).width > maxWidth) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    });
+    if (currentLine) lines.push(currentLine);
+
+    const lineHeight = fontSize * 1.3;
+    const blockHeight = lines.length * lineHeight;
+    const padding = fontSize * 0.6;
+
+    let startY;
+    if (overlay.position === 'center') startY = (canvasH - blockHeight) / 2;
+    else if (overlay.position === 'bottom') startY = canvasH - blockHeight - padding * 3 - canvasH * 0.12;
+    else startY = padding * 3;
+
+    // Background pill
+    const bgWidth = Math.min(maxWidth + padding * 2, canvasW * 0.9);
+    const bgX = (canvasW - bgWidth) / 2;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.beginPath();
+    const radius = fontSize * 0.5;
+    const bgY = startY - padding;
+    const bgH = blockHeight + padding * 2;
+    ctx.roundRect(bgX, bgY, bgWidth, bgH, radius);
+    ctx.fill();
+
+    // Text
+    ctx.fillStyle = overlay.style === 'cta' ? '#c084fc' :
+                    overlay.style === 'interrupt' ? '#fbbf24' : '#ffffff';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, canvasW / 2, startY + (i + 0.8) * lineHeight);
+    });
+    ctx.restore();
+  };
+
+  const stitchVideo = async () => {
+    if (!clips.length) return;
+    setProcessing(true);
+    setProgress(0);
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    canvas.width = 1080;
+    canvas.height = 1920;
+
+    // Load all clip videos
+    const videoEls = await Promise.all(clips.map(clip => new Promise((resolve) => {
+      const v = document.createElement('video');
+      v.src = clip.url;
+      v.muted = true;
+      v.playsInline = true;
+      v.preload = 'auto';
+      v.onloadeddata = () => resolve(v);
+      v.onerror = () => resolve(null);
+    })));
+
+    const validVideos = videoEls.filter(Boolean);
+    if (!validVideos.length) { setProcessing(false); return; }
+
+    // Calculate total duration
+    const totalDuration = validVideos.reduce((sum, v) => sum + v.duration, 0);
+    const overlays = buildOverlays(totalDuration);
+
+    // Set up canvas recording
+    const stream = canvas.captureStream(30);
+    // Try to capture audio from first clip
+    const audioCtx = new AudioContext();
+    const dest = audioCtx.createMediaStreamDestination();
+    const combinedStream = new MediaStream([
+      ...stream.getVideoTracks(),
+      ...dest.stream.getAudioTracks(),
+    ]);
+
+    const recorder = new MediaRecorder(combinedStream, {
+      mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm',
+    });
+    const chunks = [];
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+    const finalPromise = new Promise(resolve => {
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        resolve(blob);
+      };
+    });
+
+    recorder.start();
+
+    // Play each clip sequentially, drawing to canvas with overlays
+    let elapsed = 0;
+    for (let i = 0; i < validVideos.length; i++) {
+      const video = validVideos[i];
+      video.currentTime = 0;
+      await video.play();
+
+      // Connect audio if available
+      try {
+        const source = audioCtx.createMediaElementSource(video);
+        source.connect(dest);
+        source.connect(audioCtx.destination);
+      } catch {}
+
+      await new Promise(resolve => {
+        const drawFrame = () => {
+          if (video.ended || video.paused) { resolve(); return; }
+
+          // Draw video frame
+          const vRatio = video.videoWidth / video.videoHeight;
+          const cRatio = canvas.width / canvas.height;
+          let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight;
+          if (vRatio > cRatio) {
+            sw = video.videoHeight * cRatio;
+            sx = (video.videoWidth - sw) / 2;
+          } else {
+            sh = video.videoWidth / cRatio;
+            sy = (video.videoHeight - sh) / 2;
+          }
+          ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+          // Draw active overlays
+          const currentTime = elapsed + video.currentTime;
+          overlays.forEach(o => {
+            if (currentTime >= o.start && currentTime <= o.end) {
+              drawOverlay(ctx, o, canvas.width, canvas.height);
+            }
+          });
+
+          setProgress(Math.round((currentTime / totalDuration) * 100));
+          requestAnimationFrame(drawFrame);
+        };
+        video.onended = resolve;
+        drawFrame();
+      });
+
+      elapsed += video.duration;
+      video.pause();
+      setProgress(Math.round((elapsed / totalDuration) * 100));
+    }
+
+    recorder.stop();
+    const blob = await finalPromise;
+    audioCtx.close();
+
+    const url = URL.createObjectURL(blob);
+    setPreviewUrl(url);
+    setFinalBlob(blob);
+    setProcessing(false);
+    setProgress(100);
+  };
+
+  const downloadVideo = () => {
+    if (!finalBlob) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(finalBlob);
+    a.download = 'tiktok-video.webm';
+    a.click();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black flex flex-col">
+      <canvas ref={canvasRef} className="hidden" />
+
+      <div className="flex-shrink-0 p-4 pt-[env(safe-area-inset-top)] flex items-center justify-between">
+        <button onClick={onClose} className="text-white/70 text-sm font-medium">Close</button>
+        <h3 className="text-white font-bold">Video Editor</h3>
+        <div className="w-12" />
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-4 gap-6">
+        {!previewUrl && !processing && (
+          <div className="text-center space-y-4">
+            <Video className="w-16 h-16 text-white/20 mx-auto" />
+            <p className="text-white font-semibold text-lg">{clips.length} clips ready</p>
+            <p className="text-white/50 text-sm">The editor will stitch your clips together and add text overlays automatically:</p>
+            <div className="glass-subtle rounded-2xl p-4 text-left space-y-2 max-w-sm mx-auto">
+              <p className="text-violet-300 text-xs font-semibold">Hook text at 0-3s</p>
+              <p className="text-white/50 text-xs font-semibold">Feature callouts mid-video</p>
+              <p className="text-yellow-300 text-xs font-semibold">"Wait for it..." pattern interrupt</p>
+              <p className="text-purple-300 text-xs font-semibold">CTA overlay at the end</p>
+            </div>
+            <button onClick={stitchVideo}
+              className="px-8 py-3 rounded-2xl text-white font-semibold bg-gradient-to-r from-fuchsia-500/30 to-violet-500/30 border border-fuchsia-500/40 hover:from-fuchsia-500/40 hover:to-violet-500/40 transition-all flex items-center gap-2 mx-auto">
+              <Sparkles className="w-4 h-4" /> Build Video
+            </button>
+          </div>
+        )}
+
+        {processing && (
+          <div className="text-center space-y-4">
+            <Loader2 className="w-12 h-12 text-fuchsia-400 animate-spin mx-auto" />
+            <p className="text-white font-semibold">Stitching video with overlays...</p>
+            <div className="w-64 bg-white/10 rounded-full h-2 mx-auto">
+              <div className="bg-fuchsia-400 rounded-full h-2 transition-all" style={{ width: `${progress}%` }} />
+            </div>
+            <p className="text-white/40 text-sm">{progress}%</p>
+          </div>
+        )}
+
+        {previewUrl && (
+          <div className="w-full max-w-sm space-y-4">
+            <video src={previewUrl} controls playsInline className="w-full rounded-2xl" style={{ maxHeight: '60vh' }} />
+            <div className="flex gap-2">
+              <button onClick={downloadVideo}
+                className="flex-1 py-3 rounded-2xl glass-btn-active text-white font-semibold flex items-center justify-center gap-2">
+                <ArrowRight className="w-4 h-4" /> Save Video
+              </button>
+              <button onClick={() => { onComplete(finalBlob, previewUrl); }}
+                className="flex-1 py-3 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500/30 to-violet-500/30 border border-pink-500/30">
+                <Send className="w-4 h-4" /> Done
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
