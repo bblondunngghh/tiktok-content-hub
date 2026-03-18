@@ -144,6 +144,67 @@ function getDemoContent(listingData) {
   };
 }
 
+// Fetch all home listings from Clayton sitemap
+async function fetchHomeListings() {
+  const res = await fetch('https://www.claytonhomes.com/sitemap.xml', {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+  });
+  const xml = await res.text();
+  const $ = cheerio.load(xml, { xmlMode: true });
+
+  const homeUrls = [];
+  $('url loc').each((_, el) => {
+    const loc = $(el).text();
+    if (/\/homes\/[A-Z0-9]+\/$/.test(loc)) {
+      homeUrls.push(loc);
+    }
+  });
+  return homeUrls;
+}
+
+// Scrape basic details from a single home listing page
+async function scrapeHomeDetails(url) {
+  try {
+    const data = await scrapeListing(url);
+    const modelId = url.match(/\/homes\/([^/]+)/)?.[1] || '';
+    return {
+      url,
+      modelId,
+      title: (data.ogTitle || data.title || '').replace(/\s*\|.*$/, '').trim(),
+      description: data.metaDesc || data.ogDesc || '',
+      image: null,
+    };
+  } catch {
+    return { url, modelId: url.match(/\/homes\/([^/]+)/)?.[1] || '', title: '', description: '', image: null };
+  }
+}
+
+// Get all listings (returns URLs, scrapes details in batches)
+app.get('/api/listings', async (req, res) => {
+  try {
+    const urls = await fetchHomeListings();
+    res.json({ success: true, count: urls.length, listings: urls.map(url => ({
+      url,
+      modelId: url.match(/\/homes\/([^/]+)/)?.[1] || '',
+    })) });
+  } catch (err) {
+    console.error('Listings fetch error:', err);
+    res.status(500).json({ error: 'Failed to fetch listings' });
+  }
+});
+
+// Get details for a specific listing
+app.get('/api/listings/details', async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: 'URL is required' });
+    const details = await scrapeHomeDetails(url);
+    res.json({ success: true, details });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch listing details' });
+  }
+});
+
 // API endpoint
 app.post('/api/generate', async (req, res) => {
   try {

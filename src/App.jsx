@@ -164,6 +164,7 @@ function NavIcon({ src, className, active }) {
 const TABS = [
   { id: "generate", label: "Generate", customIcon: "/icons/Reward-Stars-2--Streamline-Ultimate.svg" },
   { id: "library", label: "Library", customIcon: "/icons/Archive-Books--Streamline-Ultimate.svg" },
+  { id: "inventory", label: "Inventory", icon: "Home" },
   { id: "hooks", label: "Hooks", customIcon: "/icons/Factory-Industrial-Robot-Arm-1--Streamline-Ultimate.svg" },
   { id: "captions", label: "Captions", customIcon: "/icons/Subtitles--Streamline-Ultimate.svg" },
   { id: "hashtags", label: "Hashtags", icon: "Hash" },
@@ -698,6 +699,7 @@ function LibraryPage() {
   const [library, setLibrary] = useState(getLibrary());
   const [expanded, setExpanded] = useState(null);
   const [scheduleId, setScheduleId] = useState(null);
+  const [filmingId, setFilmingId] = useState(null);
 
   const refresh = () => setLibrary(getLibrary());
 
@@ -723,6 +725,24 @@ function LibraryPage() {
         onClose={() => setScheduleId(null)}
         onSchedule={(day, time) => handleSchedule(scheduleId, day, time)}
       />
+
+      {filmingId && (() => {
+        const entry = library.find(e => e.id === filmingId);
+        if (!entry) return null;
+        return (
+          <GuidedCamera
+            shotList={entry.content.shotList}
+            onClose={() => setFilmingId(null)}
+            onComplete={(clips) => {
+              // Store clip URLs in the library entry
+              const lib = getLibrary().map(e => e.id === filmingId ? { ...e, clips: clips.map(c => c.url) } : e);
+              localStorage.setItem("content-library", JSON.stringify(lib));
+              setFilmingId(null);
+              refresh();
+            }}
+          />
+        );
+      })()}
 
       <div className="glass rounded-2xl p-6 min-h-[180px] border-blue-500/30 bg-gradient-to-r from-blue-500/30 to-indigo-500/30">
         <h2 className="text-2xl font-bold mb-2 text-white">Content Library</h2>
@@ -809,6 +829,21 @@ function LibraryPage() {
 
                   {/* Actions */}
                   <div className="flex gap-2 pt-2">
+                    {entry.clips ? (
+                      <button onClick={() => {
+                        const fullCaption = entry.content.caption + "\n\n" + entry.content.hashtags.join(" ");
+                        navigator.clipboard.writeText(fullCaption);
+                        window.location.href = "tiktok://";
+                      }}
+                        className="flex-1 py-2.5 rounded-2xl text-white text-sm font-medium flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500/30 to-violet-500/30 border border-pink-500/30 hover:from-pink-500/40 hover:to-violet-500/40 transition-all">
+                        <Send className="w-3.5 h-3.5" /> Push to TikTok
+                      </button>
+                    ) : entry.content.shotList ? (
+                      <button onClick={() => setFilmingId(entry.id)}
+                        className="flex-1 py-2.5 rounded-2xl glass-btn-active text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-white/30 bg-gradient-to-r from-red-500/20 to-orange-500/20 border-red-500/30">
+                        <Camera className="w-3.5 h-3.5" /> Film
+                      </button>
+                    ) : null}
                     {entry.scheduled ? (
                       <button onClick={() => handleUnschedule(entry.id)}
                         className="flex-1 py-2.5 rounded-2xl glass-btn text-amber-300/80 text-sm font-medium flex items-center justify-center gap-2 hover:text-amber-200">
@@ -830,6 +865,294 @@ function LibraryPage() {
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ─── GUIDED CAMERA ──────────────────────────────────────────────────
+function GuidedCamera({ shotList, onComplete, onClose }) {
+  const videoRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const streamRef = useRef(null);
+  const [currentShot, setCurrentShot] = useState(0);
+  const [recording, setRecording] = useState(false);
+  const [clips, setClips] = useState([]);
+  const [timer, setTimer] = useState(0);
+  const timerRef = useRef(null);
+  const [cameraReady, setCameraReady] = useState(false);
+
+  // Start camera
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1080 }, height: { ideal: 1920 } },
+          audio: true,
+        });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+        setCameraReady(true);
+      } catch (err) {
+        console.error('Camera error:', err);
+      }
+    };
+    startCamera();
+    return () => {
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const startRecording = () => {
+    if (!streamRef.current) return;
+    const chunks = [];
+    const recorder = new MediaRecorder(streamRef.current, { mimeType: 'video/webm;codecs=vp9,opus' });
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      setClips(prev => [...prev, { shot: currentShot, blob, url: URL.createObjectURL(blob) }]);
+    };
+    mediaRecorderRef.current = recorder;
+    recorder.start();
+    setRecording(true);
+    setTimer(0);
+    timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+      clearInterval(timerRef.current);
+
+      if (currentShot < shotList.length - 1) {
+        setCurrentShot(currentShot + 1);
+      }
+    }
+  };
+
+  const retakeShot = () => {
+    setClips(prev => prev.filter(c => c.shot !== currentShot));
+  };
+
+  const finishFilming = () => {
+    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    onComplete(clips);
+  };
+
+  const shot = shotList[currentShot];
+  const shotRecorded = clips.some(c => c.shot === currentShot);
+  const allDone = clips.length === shotList.length;
+  const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black flex flex-col">
+      {/* Camera viewfinder */}
+      <div className="flex-1 relative overflow-hidden">
+        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" playsInline muted />
+
+        {/* Shot overlay */}
+        <div className="absolute top-0 left-0 right-0 p-4 pt-[env(safe-area-inset-top)]" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
+          <div className="flex items-center justify-between mb-2">
+            <button onClick={onClose} className="text-white/70 text-sm font-medium">Cancel</button>
+            <span className="text-white/50 text-sm">Shot {currentShot + 1} of {shotList.length}</span>
+            {recording && <span className="text-red-400 font-mono text-sm flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" /> {formatTime(timer)}
+            </span>}
+          </div>
+          <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <p className="text-white font-bold text-base">{shot.description}</p>
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-white/50 text-xs">{shot.duration}</span>
+              <span className="text-yellow-300/70 text-xs">{shot.tip}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress dots */}
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+          {shotList.map((_, i) => (
+            <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all ${
+              clips.some(c => c.shot === i) ? "bg-green-400" :
+              i === currentShot ? "bg-white" : "bg-white/20"
+            }`} />
+          ))}
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex-shrink-0 bg-black px-6 py-6 pb-[env(safe-area-inset-bottom)] flex items-center justify-between">
+        {shotRecorded && !recording ? (
+          <button onClick={retakeShot} className="text-white/50 text-sm font-medium">Retake</button>
+        ) : <div className="w-16" />}
+
+        {!shotRecorded && !recording ? (
+          <button onClick={startRecording} disabled={!cameraReady}
+            className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center disabled:opacity-30">
+            <div className="w-12 h-12 rounded-full bg-red-500" />
+          </button>
+        ) : recording ? (
+          <button onClick={stopRecording}
+            className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center">
+            <div className="w-8 h-8 rounded-md bg-red-500" />
+          </button>
+        ) : (
+          <button onClick={startRecording} disabled={!cameraReady}
+            className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center disabled:opacity-30">
+            <div className="w-12 h-12 rounded-full bg-red-500" />
+          </button>
+        )}
+
+        {allDone ? (
+          <button onClick={finishFilming} className="text-emerald-400 text-sm font-bold">Done</button>
+        ) : shotRecorded && !recording ? (
+          <button onClick={() => setCurrentShot(Math.min(currentShot + 1, shotList.length - 1))}
+            className="text-white text-sm font-medium">Next &rarr;</button>
+        ) : <div className="w-16" />}
+      </div>
+    </div>
+  );
+}
+
+// ─── INVENTORY PAGE ─────────────────────────────────────────────────
+function InventoryPage() {
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState(new Set());
+  const [generating, setGenerating] = useState(false);
+  const [genProgress, setGenProgress] = useState({ done: 0, total: 0 });
+  const [search, setSearch] = useState("");
+
+  const fetchListings = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/listings");
+      const data = await res.json();
+      if (data.success) setListings(data.listings);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchListings(); }, []);
+
+  const toggleSelect = (url) => {
+    setSelected(prev => {
+      const n = new Set(prev);
+      n.has(url) ? n.delete(url) : n.add(url);
+      return n;
+    });
+  };
+
+  const selectAll = () => {
+    if (selected.size === filtered.length) setSelected(new Set());
+    else setSelected(new Set(filtered.map(l => l.url)));
+  };
+
+  const batchGenerate = async () => {
+    const urls = [...selected];
+    if (!urls.length) return;
+    setGenerating(true);
+    setGenProgress({ done: 0, total: urls.length });
+    const settings = getSettings();
+
+    for (let i = 0; i < urls.length; i++) {
+      try {
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: urls[i], provider: settings.provider, apiKey: settings.apiKey }),
+        });
+        const data = await res.json();
+        if (data.success) saveToLibrary(data.content, urls[i]);
+      } catch {}
+      setGenProgress({ done: i + 1, total: urls.length });
+    }
+    setGenerating(false);
+    setSelected(new Set());
+  };
+
+  const filtered = listings.filter(l =>
+    !search || l.modelId.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="glass rounded-2xl p-6 min-h-[180px] border-emerald-500/30 bg-gradient-to-r from-emerald-500/30 to-teal-500/30">
+        <h2 className="text-2xl font-bold mb-2 text-white">Clayton Inventory</h2>
+        <p className="text-white/70">All available Clayton Homes models. Select homes and batch generate content for your whole lot.</p>
+        <p className="text-white/40 text-sm mt-2">{listings.length} models found</p>
+      </div>
+
+      {/* Search + Actions */}
+      <div className="flex gap-2 relative z-10">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by model ID..."
+            className="w-full px-4 bg-white/10 border border-white/20 rounded-2xl text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-emerald-400/50 outline-none"
+            style={{ height: '44px' }}
+          />
+        </div>
+        {selected.size > 0 && !generating && (
+          <button onClick={batchGenerate}
+            className="px-4 rounded-2xl text-white font-semibold flex items-center gap-2 bg-emerald-500/30 border border-emerald-500/40 hover:bg-emerald-500/40 transition-all flex-shrink-0"
+            style={{ height: '44px' }}>
+            <Sparkles className="w-4 h-4" /> Generate {selected.size}
+          </button>
+        )}
+      </div>
+
+      {/* Batch progress */}
+      {generating && (
+        <div className="glass rounded-2xl p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <Loader2 className="w-5 h-5 text-emerald-400 animate-spin" />
+            <p className="text-white font-medium">Generating {genProgress.done}/{genProgress.total}...</p>
+          </div>
+          <div className="w-full bg-white/10 rounded-full h-2">
+            <div className="bg-emerald-400 rounded-full h-2 transition-all" style={{ width: `${(genProgress.done / genProgress.total) * 100}%` }} />
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="glass rounded-2xl p-12 flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-emerald-400 animate-spin" />
+          <p className="text-white/50">Loading inventory...</p>
+        </div>
+      ) : (
+        <>
+          <button onClick={selectAll} className="text-sm text-white/40 hover:text-white/70 transition-colors">
+            {selected.size === filtered.length ? "Deselect All" : `Select All (${filtered.length})`}
+          </button>
+          <div className="grid gap-2">
+            {filtered.slice(0, 50).map(l => (
+              <button key={l.url} onClick={() => toggleSelect(l.url)}
+                className={`w-full text-left rounded-2xl p-4 flex items-center gap-3 transition-all ${selected.has(l.url) ? "glass-btn-active" : "glass-subtle hover:bg-white/15"}`}>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected.has(l.url) ? "bg-emerald-400/80 border-emerald-400/80" : "border-white/20"}`}>
+                  {selected.has(l.url) && <Check className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium truncate">{l.modelId}</p>
+                  <p className="text-white/30 text-xs truncate">{l.url}</p>
+                </div>
+                <Home className="w-4 h-4 text-white/20 flex-shrink-0" />
+              </button>
+            ))}
+            {filtered.length > 50 && (
+              <p className="text-white/30 text-center text-sm py-2">Showing 50 of {filtered.length} — use search to filter</p>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
@@ -1100,7 +1423,7 @@ export default function App() {
   const [tab, setTab] = useState("generate");
   usePostReminders();
 
-  const pages = { generate: GeneratePage, library: LibraryPage, hooks: HooksPage, captions: CaptionsPage, hashtags: HashtagsPage, calendar: CalendarPage, formulas: FormulasPage, algorithm: AlgorithmPage, checklist: ChecklistPage };
+  const pages = { generate: GeneratePage, library: LibraryPage, inventory: InventoryPage, hooks: HooksPage, captions: CaptionsPage, hashtags: HashtagsPage, calendar: CalendarPage, formulas: FormulasPage, algorithm: AlgorithmPage, checklist: ChecklistPage };
   const Page = pages[tab];
 
   const tabsRef = useRef({});
