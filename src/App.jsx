@@ -240,15 +240,19 @@ function CaptionsPage() {
         <p className="text-white/70">Fill in the blanks to generate ready-to-paste captions. Keywords in captions boost visibility 20-40%.</p>
       </div>
 
-      <div className="glass-subtle rounded-2xl p-2">
-        <div className="flex gap-2 overflow-x-auto">
-          {CAPTION_TEMPLATES.map((t, i) => (
-            <button key={i} onClick={() => { setActive(i); setFields({}); }}
-              className={`flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${active === i ? "glass-btn-active text-white" : "text-white/50 hover:text-white/80"}`}>
-              {t.name}
-            </button>
-          ))}
-        </div>
+      <div
+        className="flex gap-2 overflow-x-auto py-2"
+        style={{
+          maskImage: 'linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent)',
+        }}
+      >
+        {CAPTION_TEMPLATES.map((t, i) => (
+          <button key={i} onClick={() => { setActive(i); setFields({}); }}
+            className={`flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${active === i ? "glass-btn-active text-white" : "glass-btn text-white/70"}`}>
+            {t.name}
+          </button>
+        ))}
       </div>
 
       <div className="glass rounded-2xl px-3 py-5 sm:px-5 space-y-4">
