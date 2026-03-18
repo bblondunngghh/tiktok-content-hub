@@ -2071,7 +2071,7 @@ export default function App() {
                   onClick={() => setMoreOpen(!moreOpen)}
                   className={`flex-1 flex flex-col items-center justify-center gap-1.5 pt-4 pb-3 text-xs font-medium transition-colors duration-200 ${isMoreTab || moreOpen ? "text-white" : "text-white/40 hover:text-white/70"}`}
                 >
-                  <LayoutGrid className="w-8 h-8" />
+                  <NavIcon src="/icons/Navigation-Menu-Horizontal-1--Streamline-Ultimate.svg" className="w-8 h-8" active={isMoreTab || moreOpen} />
                   <span className="text-[11px] leading-tight">More</span>
                 </button>
               </div>
