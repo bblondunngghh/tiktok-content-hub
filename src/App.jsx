@@ -202,13 +202,15 @@ function HooksPage() {
         )}
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {categories.map(c => (
-          <button key={c} onClick={() => setCat(c)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${cat === c ? "glass-btn-active text-white" : "glass-btn text-white/70"}`}>
-            {catLabels[c]}
-          </button>
-        ))}
+      <div className="rounded-2xl overflow-hidden">
+        <div className="flex gap-2 overflow-x-auto py-2 px-2">
+          {categories.map(c => (
+            <button key={c} onClick={() => setCat(c)}
+              className={`flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-semibold transition-all ${cat === c ? "glass-btn-active text-white" : "glass-btn text-white/70"}`}>
+              {catLabels[c]}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-3">
