@@ -708,7 +708,9 @@ function LibraryPage() {
   const [scheduleId, setScheduleId] = useState(null);
   const [filmingId, setFilmingId] = useState(null);
   const [stitchingData, setStitchingData] = useState(null);
-  const [selections, setSelections] = useState({}); // { [entryId]: { hook: 0, caption: true, hashtags: true } }
+  const [selections, setSelections] = useState({});
+  const [ctaPickerId, setCtaPickerId] = useState(null);
+  const [selectedCta, setSelectedCta] = useState({}); // { [entryId]: { hook: 0, caption: true, hashtags: true } }
 
   const getSelection = (id) => selections[id] || { hook: 0, caption: true, hashtags: true };
   const updateSelection = (id, key, value) => setSelections(prev => ({ ...prev, [id]: { ...getSelection(id), [key]: value } }));
@@ -738,16 +740,27 @@ function LibraryPage() {
         onSchedule={(day, time) => handleSchedule(scheduleId, day, time)}
       />
 
+      <CTAPicker
+        open={!!ctaPickerId}
+        onClose={() => setCtaPickerId(null)}
+        onSelect={(cta) => {
+          setSelectedCta(prev => ({ ...prev, [ctaPickerId]: cta }));
+          setFilmingId(ctaPickerId);
+          setCtaPickerId(null);
+        }}
+      />
+
       {filmingId && (() => {
         const entry = library.find(e => e.id === filmingId);
         if (!entry) return null;
         return createPortal(
           <GuidedCamera
             shotList={entry.content.shotList}
+            cta={selectedCta[entry.id]}
             onClose={() => setFilmingId(null)}
             onComplete={(clips) => {
               setFilmingId(null);
-              setStitchingData({ id: entry.id, clips, content: entry.content });
+              setStitchingData({ id: entry.id, clips, content: entry.content, cta: selectedCta[entry.id] });
             }}
           />,
           document.body
@@ -758,6 +771,7 @@ function LibraryPage() {
         <VideoStitcher
           clips={stitchingData.clips}
           content={stitchingData.content}
+          cta={stitchingData.cta}
           onClose={() => setStitchingData(null)}
           onComplete={(blob, url) => {
             const lib = getLibrary().map(e => e.id === stitchingData.id ? { ...e, clips: [url], videoReady: true } : e);
@@ -891,7 +905,7 @@ function LibraryPage() {
                         <Send className="w-3.5 h-3.5" /> Push to TikTok
                       </button>
                     ) : entry.content.shotList ? (
-                      <button onClick={() => setFilmingId(entry.id)}
+                      <button onClick={() => setCtaPickerId(entry.id)}
                         className="flex-1 py-2.5 rounded-2xl glass-btn-active text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-white/30 bg-gradient-to-r from-red-500/20 to-orange-500/20 border-red-500/30">
                         <Camera className="w-3.5 h-3.5" /> Film
                       </button>
@@ -922,8 +936,65 @@ function LibraryPage() {
   );
 }
 
+// ─── CTA OPTIONS ────────────────────────────────────────────────────
+const CTA_OPTIONS = [
+  { text: "DM me 'HOME' and I'll send you everything", emoji: "📩" },
+  { text: "Comment 'INFO' below for details", emoji: "💬" },
+  { text: "Link in bio for a virtual tour", emoji: "🔗" },
+  { text: "Follow for more homes like this", emoji: "➕" },
+  { text: "Save this for when you're ready", emoji: "🔖" },
+  { text: "Share this with someone who needs to see it", emoji: "📤" },
+  { text: "Tag someone who's still renting", emoji: "🏷️" },
+  { text: "Drop a 🏠 if you want a walkthrough", emoji: "🏠" },
+];
+
+function CTAPicker({ open, onClose, onSelect }) {
+  const [custom, setCustom] = useState("");
+  if (!open) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative z-10 w-full max-w-lg rounded-t-3xl p-5 pb-[env(safe-area-inset-bottom)]"
+        style={{ backgroundColor: 'rgba(30,30,30,0.95)', backdropFilter: 'blur(12px)' }}
+        onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
+        <h3 className="text-white font-bold text-lg mb-1">Choose Your CTA</h3>
+        <p className="text-white/40 text-sm mb-4">This will show on screen during your closing shot</p>
+
+        <div className="space-y-2 max-h-[50vh] overflow-y-auto mb-4">
+          {CTA_OPTIONS.map((cta, i) => (
+            <button key={i} onClick={() => onSelect(cta.text)}
+              className="w-full text-left rounded-2xl p-3.5 flex items-center gap-3 bg-white/5 border border-white/10 hover:bg-white/10 active:bg-white/15 transition-all">
+              <span className="text-2xl flex-shrink-0">{cta.emoji}</span>
+              <span className="text-white/90 text-sm font-medium">{cta.text}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={custom}
+            onChange={e => setCustom(e.target.value)}
+            placeholder="Or type your own CTA..."
+            className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-sm text-white placeholder-white/30 outline-none focus:ring-2 focus:ring-fuchsia-400/50"
+          />
+          {custom.trim() && (
+            <button onClick={() => onSelect(custom.trim())}
+              className="px-5 py-3 rounded-2xl bg-fuchsia-500/30 border border-fuchsia-500/40 text-white font-semibold text-sm active:bg-fuchsia-500/50">
+              Use
+            </button>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ─── VIDEO STITCHER WITH TEXT OVERLAYS ───────────────────────────────
-function VideoStitcher({ clips, content, onComplete, onClose }) {
+function VideoStitcher({ clips, content, cta, onComplete, onClose }) {
   const canvasRef = useRef(null);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -955,7 +1026,7 @@ function VideoStitcher({ clips, content, onComplete, onClose }) {
     const interruptTime = totalDuration * 0.4;
     overlays.push({ start: interruptTime, end: interruptTime + 2, text: 'Wait for it...', style: 'interrupt', position: 'center' });
     // CTA at the end
-    overlays.push({ start: totalDuration - 4, end: totalDuration - 0.5, text: 'DM me HOME for details', style: 'cta', position: 'bottom' });
+    overlays.push({ start: totalDuration - 4, end: totalDuration - 0.5, text: cta || 'DM me HOME for details', style: 'cta', position: 'bottom' });
     return overlays;
   };
 
@@ -1200,7 +1271,7 @@ function VideoStitcher({ clips, content, onComplete, onClose }) {
 }
 
 // ─── GUIDED CAMERA ──────────────────────────────────────────────────
-function GuidedCamera({ shotList, onComplete, onClose }) {
+function GuidedCamera({ shotList, cta, onComplete, onClose }) {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -1392,6 +1463,12 @@ function GuidedCamera({ shotList, onComplete, onClose }) {
           <p className="text-white font-bold text-xl leading-tight mb-1">{shot.description}</p>
           {showTip && <p className="text-yellow-200/80 text-sm mb-1">{shot.tip}</p>}
           <p className="text-white/40 text-xs">{shot.duration}</p>
+          {cta && currentShot === shotList.length - 1 && (
+            <div className="mt-3 bg-fuchsia-500/20 border border-fuchsia-400/30 rounded-2xl px-4 py-3">
+              <p className="text-fuchsia-200/60 text-[10px] font-semibold uppercase tracking-wide mb-1">Say this to camera:</p>
+              <p className="text-white font-bold text-lg">"{cta}"</p>
+            </div>
+          )}
         </div>
 
         {/* Controls */}
