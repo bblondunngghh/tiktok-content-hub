@@ -1909,9 +1909,9 @@ export default function App() {
   }, [tab, isMoreTab]);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      {/* Header — minimal */}
-      <div className="flex-shrink-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderTop: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), inset 0 0 6px 3px rgba(255,255,255,0.04)' }}>
+    <div className="h-full relative overflow-hidden">
+      {/* Header — fixed, glass blur shows content scrolling behind */}
+      <div className="fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)]" style={{ borderRadius: '0 0 24px 24px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.08)', borderTop: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), inset 0 0 6px 3px rgba(255,255,255,0.04)' }}>
         <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-fuchsia-500/80 to-violet-600/80 flex items-center justify-center border border-white/20">
@@ -1925,8 +1925,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Page content */}
-      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch', paddingBottom: '5.5rem' }}>
+      {/* Page content — scrolls behind header and bottom bar */}
+      <div className="h-full overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch', paddingTop: 'calc(env(safe-area-inset-top) + 64px)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 88px)' }}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <Page />
         </div>
@@ -1936,52 +1936,51 @@ export default function App() {
         </div>
       </div>
 
-      {/* Bottom tab bar */}
-      <div
-        className="flex-shrink-0 z-50"
-        style={{
-          borderRadius: '24px 24px 0 0',
-          backgroundColor: 'rgba(255,255,255,0.12)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderBottom: 'none',
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 0 6px 3px rgba(255,255,255,0.04)',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-        }}
-      >
-        <div className="max-w-4xl mx-auto px-2">
-          <div className="relative">
-            {/* Active indicator — top of bar */}
-            <div
-              className="absolute top-0 h-[2px] rounded-full transition-all duration-300 ease-in-out"
-              style={{
-                left: indicator.left + indicator.width * 0.2,
-                width: indicator.width * 0.6,
-                background: '#7c3aed',
-              }}
-            />
-            <div className="flex">
-              {PRIMARY_TABS.map(t => (
+      {/* Bottom tab bar — floating glass card */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+        <div
+          className="max-w-4xl mx-auto rounded-3xl"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(255,255,255,0.03), inset 0 0 6px 3px rgba(255,255,255,0.04)',
+          }}
+        >
+          <div className="px-2">
+            <div className="relative">
+              {/* Active indicator — top of bar */}
+              <div
+                className="absolute top-0 h-[2px] rounded-full transition-all duration-300 ease-in-out"
+                style={{
+                  left: indicator.left + indicator.width * 0.2,
+                  width: indicator.width * 0.6,
+                  background: '#7c3aed',
+                }}
+              />
+              <div className="flex">
+                {PRIMARY_TABS.map(t => (
+                  <button
+                    key={t.id}
+                    ref={el => tabsRef.current[t.id] = el}
+                    onClick={() => { setTab(t.id); setMoreOpen(false); }}
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 pt-3 pb-2 text-xs font-medium transition-colors duration-200 ${tab === t.id ? "text-white" : "text-white/40 hover:text-white/70"}`}
+                  >
+                    {t.customIcon ? <NavIcon src={t.customIcon} className="w-6 h-6" active={tab === t.id} /> : <DynIcon name={t.icon} className="w-6 h-6" />}
+                    <span className="text-[10px] leading-tight">{t.label}</span>
+                  </button>
+                ))}
+                {/* More button */}
                 <button
-                  key={t.id}
-                  ref={el => tabsRef.current[t.id] = el}
-                  onClick={() => { setTab(t.id); setMoreOpen(false); }}
-                  className={`flex-1 flex flex-col items-center justify-center gap-1 pt-3 pb-2 text-xs font-medium transition-colors duration-200 ${tab === t.id ? "text-white" : "text-white/40 hover:text-white/70"}`}
+                  ref={el => tabsRef.current['__more__'] = el}
+                  onClick={() => setMoreOpen(!moreOpen)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1 pt-3 pb-2 text-xs font-medium transition-colors duration-200 ${isMoreTab || moreOpen ? "text-white" : "text-white/40 hover:text-white/70"}`}
                 >
-                  {t.customIcon ? <NavIcon src={t.customIcon} className="w-6 h-6" active={tab === t.id} /> : <DynIcon name={t.icon} className="w-6 h-6" />}
-                  <span className="text-[10px] leading-tight">{t.label}</span>
+                  <LayoutGrid className="w-6 h-6" />
+                  <span className="text-[10px] leading-tight">More</span>
                 </button>
-              ))}
-              {/* More button */}
-              <button
-                ref={el => tabsRef.current['__more__'] = el}
-                onClick={() => setMoreOpen(!moreOpen)}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 pt-3 pb-2 text-xs font-medium transition-colors duration-200 ${isMoreTab || moreOpen ? "text-white" : "text-white/40 hover:text-white/70"}`}
-              >
-                <LayoutGrid className="w-6 h-6" />
-                <span className="text-[10px] leading-tight">More</span>
-              </button>
+              </div>
             </div>
           </div>
         </div>
