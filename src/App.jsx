@@ -1940,7 +1940,7 @@ function usePostReminders() {
 function MoreOverlay({ open, onClose, onSelect, activeTab }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40" onClick={onClose}>
+    <div className="fixed inset-0 z-[60]" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50" />
       <div className="absolute bottom-0 left-0 right-0 z-10" onClick={e => e.stopPropagation()}>
         <div
